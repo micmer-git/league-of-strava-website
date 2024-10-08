@@ -6,7 +6,11 @@ document.getElementById('file-input').addEventListener('change', function(e) {
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                displayTable(results.data);
+                // Map CSV data to activity objects
+                const activities = results.data.map(mapCsvRowToActivity);
+                console.log('Activities:', activities); // Log the activities
+                // Initialize the dashboard with the mapped activities
+                initializeDashboard(activities);
             },
             error: function(err) {
                 console.error('Error parsing CSV:', err);
@@ -21,13 +25,13 @@ function mapCsvRowToActivity(row) {
         start_date: row['Activity Date'],
         name: row['Activity Name'],
         type: row['Activity Type'],
-        elapsed_time: parseFloat(row['Elapsed Time']),
-        moving_time: parseFloat(row['Moving Time']),
-        distance: parseFloat(row['Distance']),
-        total_elevation_gain: parseFloat(row['Elevation Gain']),
-        average_heartrate: parseFloat(row['Average Heart Rate']),
-        max_heartrate: parseFloat(row['Max Heart Rate']),
-        kilojoules: parseFloat(row['Calories']),
+        elapsed_time: parseFloat(row['Elapsed Time']) || 0,
+        moving_time: parseFloat(row['Moving Time']) || 0,
+        distance: parseFloat(row['Distance']) || 0,
+        total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
+        average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
+        max_heartrate: parseFloat(row['Max Heart Rate']) || 0,
+        kilojoules: parseFloat(row['Calories']) || 0,
         // Add any other fields required by your dashboard functions
     };
 }
