@@ -236,9 +236,9 @@
     <h2>Upload Your Activity CSV</h2>
     <input type="file" id="csv-file-input" accept=".csv" />
     <button id="upload-button">Upload and Load Dashboard</button>
-    <progress id="parse-progress" value="0" max="100" style="width: 100%; display: none;"></progress>
-
     <p id="upload-status"></p>
+    <!-- Progress Bar -->
+    <progress id="parse-progress" value="0" max="100" style="width: 100%; display: none;"></progress>
   </div>
 
   <!-- Dashboard Container (Initially Hidden) -->
@@ -246,19 +246,25 @@
     <!-- Loading Indicator -->
     <div id="loading">Loading your dashboard...</div>
 
-    <!-- Header Section: Athlete Info and Coins -->
+    <!-- Loading Spinner (Optional) -->
+    <div id="loading-spinner" style="display: none;">🔄</div>
+
+    <!-- Error Message Container -->
+    <div id="error-message" style="color: red; display: none;"></div>
+
+    <!-- Overview Section -->
     <div class="overview-section" style="display: none;">
+      <!-- Athlete Info and Coins -->
       <div class="overview-left">
         <div class="athlete-info">
-          <h1 id="athlete-name">Michele Merelli</h1>
-
+          <h1 id="athlete-name">John Doe</h1>
           <div class="current-rank">
             <div class="rank-header">
               <div class="rank-title">
                 Current Rank: <span id="current-rank"></span> <span id="rank-emoji">🥉</span>
               </div>
             </div>
-            <span class="rank-header" id="current-rank"></span>
+            <span class="rank-header" id="current-rank-label"></span>
           </div>
 
           <div class="achievements-section">
@@ -268,6 +274,7 @@
           </div>
         </div>
       </div>
+
       <div class="overview-right">
         <div class="coin-metrics">
           <div class="coin" title="Everest">
@@ -284,6 +291,7 @@
             <span id="distance-value">0</span> 🚴
             <div class="week-gain bold-green" id="distance-week-gain"></div>
           </div>
+          <!-- Added Elevation and Calories Coins -->
           <div class="coin" title="Elevation">
             <span id="elevation-value">0</span> 🗻
             <div class="week-gain bold-green" id="elevation-week-gain"></div>

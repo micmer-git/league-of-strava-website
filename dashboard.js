@@ -167,32 +167,22 @@ document.getElementById('upload-button').addEventListener('click', () => {
 // Function to map CSV data to activity objects expected by the dashboard
 function mapCSVToActivities(csvData) {
   return csvData.map(row => {
-    const activity = {
+    return {
       id: row['Activity ID'],
       start_date: parseDate(row['Activity Date']),
       name: row['Activity Name'],
-      type: row['Activity Type'] || 'Ride',
-      moving_time: parseInt(row['Moving Time']) || 0,
-      distance: parseFloat(row['Distance 2']) * 1000 || 0,
-      total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
+      type: row['Activity Type'] || 'Ride', // Default to 'Ride' if not specified
+      moving_time: parseInt(row['Moving Time']) || 0, // 'Moving Time' corresponds to 'Elapsed Time 2'
+      distance: parseFloat(row['Distance 2']) || 0, // 'Distance 2' corresponds to the actual distance in meters
+      total_elevation_gain: parseFloat(row['Elevation Gain']) || 0, // in meters
       average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
-      kilojoules: parseFloat(row['Calories']) * 4.184 || 0,
+      kilojoules: parseFloat(row['Calories']) * 4.184 || 0, // Convert kcal to kJ if necessary
       athlete: {
         firstname: 'John',
         lastname: 'Doe'
       }
     };
-
-    console.log('Mapping Activity:', activity); // Add this line
-
-    return activity;
-  }).filter(activity => {
-    if (!activity.id || !activity.name) {
-      console.warn('Filtering out activity due to missing id or name:', activity);
-      return false;
-    }
-    return true;
-  });
+  }).filter(activity => activity.id && activity.name); // Filter out invalid entries
 }
 
 
