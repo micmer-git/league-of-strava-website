@@ -221,6 +221,12 @@
       color: green;
     }
   </style>
+
+  <!-- Include PapaParse Library with defer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" defer integrity="sha512-+dHRbE70ttgo3RUDcxYbduXR5EBsYdVxZJi2j3uixxB9Gek4kLwAN7zrHULYQvoM49vczv5XYpgMRjWxMBuF7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+  <!-- Include your JavaScript file AFTER PapaParse with defer -->
+  <script src="dashboard.js" defer></script>
 </head>
 <body>
   <!-- CSV Upload Section -->
@@ -370,11 +376,6 @@
     </div>
   </div>
 
-  <!-- Include PapaParse Library -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" integrity="sha512-+dHRbE70ttgo3RUDcxYbduXR5EBsYdVxZJi2j3uixxB9Gek4kLwAN7zrHULYQvoM49vczv5XYpgMRjWxMBuF7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
-  <!-- Include your JavaScript file AFTER PapaParse -->
-  <script src="dashboard.js" defer></script>
-  
 </body>
 </html>
