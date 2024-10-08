@@ -175,15 +175,11 @@ function mapCSVToActivities(csvData) {
   return csvData.map(row => {
     const activity = {
       id: row['Activity ID'],
-      start_date: parseDate(row['Activity Date']),
-      name: row['Activity Name'],
     };
 
-    // Remove debugging console.log if not needed
-    // console.log('Mapping Activity:', activity);
 
     return activity;
-  }).filter(activity => activity.id && activity.name);
+  }).filter(activity => activity.id);
 }
 
 // Helper function to parse date strings into ISO format
