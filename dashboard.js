@@ -1,5 +1,4 @@
 // Global Variables
-let allActivities = [];
 let currentPage = 1;
 const perPage = 200;
 let hasMoreActivities = true;
