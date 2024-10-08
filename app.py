@@ -93,17 +93,18 @@ def load_data():
 def get_time_filtered_df(df, period):
     now = pd.Timestamp.now()
     if period == 'lifetime':
-        return df
-    elif period == 'last_year':
-        start_date = now - pd.DateOffset(years=1)
+        return df.copy()
+    elif period == 'last_365_days':
+        start_date = now - pd.Timedelta(days=365)
     elif period == 'ytd':
         start_date = pd.Timestamp(year=now.year, month=1, day=1)
     elif period == 'last_30_days':
         start_date = now - pd.Timedelta(days=30)
     else:
-        return df  # Default to lifetime
-    filtered_df = df[df['Activity Date'] >= start_date]
+        return df.copy()  # Default to lifetime
+    filtered_df = df[df['Activity Date'] >= start_date].copy()
     return filtered_df
+
 
 # Calculate summary statistics
 def calculate_stats(df):
@@ -132,6 +133,7 @@ def calculate_coins(df):
     # Ensure necessary columns are numeric
     df['Total Elevation Gain'] = pd.to_numeric(df['Elevation Gain'], errors='coerce').fillna(0)
     df['Average Heart Rate'] = pd.to_numeric(df['Average Heart Rate'], errors='coerce').fillna(0)
+    df['Calories'] = pd.to_numeric(df['Calories'], errors='coerce').fillna(0)
 
     # Estimate total heartbeats if average heart rate is available
     df['Total Heartbeats'] = df['Average Heart Rate'] * (df['Elapsed Time'] / 60)
@@ -145,10 +147,16 @@ def calculate_coins(df):
     pizza_coins = total_calories / PIZZA_CALORIES
     heartbeat_coins = total_heartbeats / HEARTBEAT_UNIT
 
+    # New coins
+    climber_coin = len(df[df['Total Elevation Gain'] > 1000])
+    michelin_star_coin = len(df[df['Calories'] > 2000])
+
     coins = [
         {'name': 'Everest Coins', 'emoji': '🏔️', 'count': everest_coins},
         {'name': 'Pizza Coins', 'emoji': '🍕', 'count': pizza_coins},
-        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': heartbeat_coins}
+        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': heartbeat_coins},
+        {'name': 'Climber Activities', 'emoji': '⛰️', 'count': climber_coin},
+        {'name': 'Michelin Star Burner', 'emoji': '🔥', 'count': michelin_star_coin}
     ]
 
     return coins
@@ -201,6 +209,29 @@ def calculate_achievements(df, achievement_config):
                 'count': occasion_count
             })
 
+    # Triathlon Achievements
+    df['Date'] = df['Activity Date'].dt.date
+    dates = df['Date'].unique()
+    for triathlon in achievement_config.get('triathlon_achievements', []):
+        count = 0
+        for date in dates:
+            day_activities = df[df['Date'] == date]
+            # Check for Swim, Ride, Run
+            swim_distance = day_activities[day_activities['Activity Type'] == 'Swim']['Distance'].sum()
+            ride_distance = day_activities[day_activities['Activity Type'] == 'Ride']['Distance'].sum()
+            run_distance = day_activities[day_activities['Activity Type'] == 'Run']['Distance'].sum()
+            distances = triathlon['distances']
+            if (swim_distance >= distances.get('Swim', 0) and
+                ride_distance >= distances.get('Ride', 0) and
+                run_distance >= distances.get('Run', 0)):
+                count += 1
+        if count > 0:
+            achievements.append({
+                'name': triathlon['name'],
+                'emoji': triathlon['emoji'],
+                'count': count
+            })
+
     return achievements
 
 # Load data once when the server starts
@@ -208,30 +239,24 @@ dataframe = load_data()
 
 @app.route('/')
 def index():
-    periods = ['lifetime', 'last_year', 'ytd', 'last_30_days']
+    periods = ['lifetime', 'ytd', 'last_365_days', 'last_30_days']
     period_names = {
         'lifetime': 'Lifetime',
-        'last_year': 'Last Year',
+        'last_365_days': 'Last 365 Days',
         'ytd': 'Year to Date',
         'last_30_days': 'Last 30 Days'
     }
 
     achievements_by_period = {}
+    coins_by_period = {}
 
     for period in periods:
         filtered_df = get_time_filtered_df(dataframe, period)
         achievements = calculate_achievements(filtered_df, achievement_config)
         coins = calculate_coins(filtered_df)
-        # Include coins in achievements
-        coins_as_achievements = []
-        for coin in coins:
-            coins_as_achievements.append({
-                'name': coin['name'],
-                'emoji': coin['emoji'],
-                'count': coin['count']
-            })
-        # Combine achievements and coins
-        achievements_by_period[period] = achievements + coins_as_achievements
+        # Keep coins and achievements separate
+        achievements_by_period[period] = achievements
+        coins_by_period[period] = coins
 
     # For Rank and Stats, we will use Lifetime data
     stats = calculate_stats(dataframe)
@@ -243,6 +268,7 @@ def index():
                            total_hours=total_hours,
                            stats=stats,
                            achievements_by_period=achievements_by_period,
+                           coins_by_period=coins_by_period,
                            period_names=period_names)
 
 if __name__ == '__main__':

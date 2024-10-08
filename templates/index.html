@@ -13,23 +13,24 @@
         .achievements-section {
             margin-top: 30px;
         }
-        .achievement-list {
+        .achievement-list, .coin-list {
             display: flex;
             flex-wrap: wrap;
         }
-        .achievement-item {
+        .achievement-item, .coin-item {
             font-size: 24px;
             margin: 5px;
             position: relative;
             cursor: pointer;
+            padding-right: 25px;
         }
-        .achievement-item .badge {
+        .achievement-item .badge, .coin-item .badge {
             font-size: 16px;
             position: absolute;
             top: -5px;
             right: -10px;
         }
-        .achievement-tooltip {
+        .achievement-tooltip, .coin-tooltip {
             display: none;
             position: absolute;
             bottom: 100%;
@@ -44,7 +45,7 @@
             font-size: 14px;
             z-index: 100;
         }
-        .achievement-item:hover .achievement-tooltip {
+        .achievement-item:hover .achievement-tooltip, .coin-item:hover .coin-tooltip {
             display: block;
         }
         .statistics .card-body p {
@@ -76,10 +77,63 @@
             </div>
         </div>
 
-        <!-- Achievements Sections -->
-        {% for period in ['lifetime', 'last_year', 'ytd', 'last_30_days'] %}
+        <!-- Achievements and Coins Sections -->
+        <div class="row">
+            <div class="col-md-6">
+                {% for period in ['lifetime', 'ytd'] %}
+                <div class="achievements-section">
+                    <h3>{{ period_names[period] }} - Coins</h3>
+                    {% if coins_by_period[period] %}
+                    <div class="coin-list">
+                        {% for coin in coins_by_period[period] %}
+                        <div class="coin-item">
+                            {{ coin.emoji }}
+                            <span class="badge badge-pill badge-primary">
+                                x{{ coin.count | round }}
+                            </span>
+                            <div class="coin-tooltip">
+                                {{ coin.name }}: {{ coin.count | round(2) }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No coins yet. Keep going!</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="col-md-6">
+                {% for period in ['last_365_days', 'last_30_days'] %}
+                <div class="achievements-section">
+                    <h3>{{ period_names[period] }} - Coins</h3>
+                    {% if coins_by_period[period] %}
+                    <div class="coin-list">
+                        {% for coin in coins_by_period[period] %}
+                        <div class="coin-item">
+                            {{ coin.emoji }}
+                            <span class="badge badge-pill badge-primary">
+                                x{{ coin.count | round }}
+                            </span>
+                            <div class="coin-tooltip">
+                                {{ coin.name }}: {{ coin.count | round(2) }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No coins yet. Keep going!</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Achievements Badges Section -->
         <div class="achievements-section">
-            <h3>{{ period_names[period] }}</h3>
+            <h3>Achievements Badges</h3>
+            {% for period in periods %}
+            <h4>{{ period_names[period] }}</h4>
             {% if achievements_by_period[period] %}
             <div class="achievement-list">
                 {% for achievement in achievements_by_period[period] %}
@@ -97,8 +151,8 @@
             {% else %}
             <p>No achievements yet. Keep going!</p>
             {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
 
         <!-- Optional JavaScript -->
         <!-- jQuery first, then Popper.js, then Bootstrap JS -->
