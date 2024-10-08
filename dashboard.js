@@ -203,10 +203,8 @@ function mapCSVToActivities(csvData) {
 
 // Helper function to parse date strings into ISO format
 function parseDate(dateStr) {
-  // Handle cases where dateStr might include commas and quotes
-  // Example: "Apr 10, 2016, 6:49:13 AM"
-  const cleanedDateStr = dateStr.replace(/"/g, '').trim();
-  const parsedDate = new Date(cleanedDateStr);
+  // Use Date.parse or a library for complex date formats
+  const parsedDate = new Date(dateStr);
   return isNaN(parsedDate) ? new Date().toISOString() : parsedDate.toISOString();
 }
 
