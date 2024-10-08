@@ -1,3 +1,38 @@
+document.getElementById('file-input').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+
+    if (file) {
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                displayTable(results.data);
+            },
+            error: function(err) {
+                console.error('Error parsing CSV:', err);
+            }
+        });
+    }
+});
+
+function mapCsvRowToActivity(row) {
+    return {
+        id: row['Activity ID'],
+        start_date: row['Activity Date'],
+        name: row['Activity Name'],
+        type: row['Activity Type'],
+        elapsed_time: parseFloat(row['Elapsed Time']),
+        moving_time: parseFloat(row['Moving Time']),
+        distance: parseFloat(row['Distance']),
+        total_elevation_gain: parseFloat(row['Elevation Gain']),
+        average_heartrate: parseFloat(row['Average Heart Rate']),
+        max_heartrate: parseFloat(row['Max Heart Rate']),
+        kilojoules: parseFloat(row['Calories']),
+        // Add any other fields required by your dashboard functions
+    };
+}
+
+
 // Rank System Configuration
 const rankConfig = [
   { name: 'Bronze 3', emoji: '🥉', minPoints: 0 },
@@ -105,89 +140,7 @@ let BODY_WEIGHT_KG = 80; // in kilograms
 let AGE = 30; // in years
 let GENDER = 'male'; // 'male' or 'female'
 
-// Event Listener for CSV Upload Button
-document.getElementById('upload-button').addEventListener('click', () => {
-  const fileInput = document.getElementById('csv-file-input');
-  const file = fileInput.files[0];
-  const uploadStatus = document.getElementById('upload-status');
-  const loadingSpinner = document.getElementById('loading-spinner');
 
-  if (!file) {
-    alert('Please select a CSV file to upload.');
-    return;
-  }
-
-  uploadStatus.style.color = 'black';
-  uploadStatus.textContent = 'Uploading and processing...';
-  //loadingSpinner.style.display = 'block';
-
-  const progressBar = document.getElementById('parse-progress');
-  progressBar.style.display = 'block';
-
-  Papa.parse(file, {
-    header: true,
-    skipEmptyLines: true,
-    chunkSize: 1024 * 1024, // 1MB chunk size
-    step: function(results, parser) {
-      // Update progress bar based on bytes processed
-      const progress = Math.min(100, Math.round((parser.streamer._inputStream._pos / file.size) * 100));
-      progressBar.value = progress;
-    },
-    complete: function(results) {
-      console.log('CSV Parsing Results:', results);
-      const activities = mapCSVToActivities(results.data);
-      if (activities.length === 0) {
-        uploadStatus.style.color = 'red';
-        uploadStatus.textContent = 'No valid activities found in the CSV.';
-        if (loadingSpinner) {
-          loadingSpinner.style.display = 'none';
-        } else {
-          console.error('Loading spinner element is missing.');
-        }
-        return;
-      }
-      initializeDashboard(activities);
-      uploadStatus.style.color = 'green';
-      uploadStatus.textContent = 'Dashboard loaded successfully!';
-      if (loadingSpinner) {
-        loadingSpinner.style.display = 'none';
-      } else {
-        console.error('Loading spinner element is missing.');
-      }
-      document.getElementById('dashboard-container').style.display = 'block';
-      document.getElementById('csv-upload-section').style.display = 'none';
-    },
-    error: function(err) {
-      console.error('Error parsing CSV:', err);
-      uploadStatus.style.color = 'red';
-      uploadStatus.textContent = 'Error parsing CSV file.';
-      if (loadingSpinner) {
-        loadingSpinner.style.display = 'none';
-      } else {
-        console.error('Loading spinner element is missing.');
-      }
-    }
-  });
-});
-
-// Function to map CSV data to activity objects expected by the dashboard
-function mapCSVToActivities(csvData) {
-  return csvData.map(row => {
-    const activity = {
-      id: row['Activity ID'],
-    };
-
-
-    return activity;
-  }).filter(activity => activity.id);
-}
-
-// Helper function to parse date strings into ISO format
-function parseDate(dateStr) {
-  // Use Date.parse or a library for complex date formats
-  const parsedDate = new Date(dateStr);
-  return isNaN(parsedDate) ? new Date().toISOString() : parsedDate.toISOString();
-}
 
 // Function to initialize the dashboard with parsed activities
 function initializeDashboard(activities) {
