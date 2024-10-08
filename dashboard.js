@@ -5,12 +5,12 @@ document.getElementById('upload-button').addEventListener('click', function() {
     if (file) {
         console.log('File selected:', file.name); // Debugging
         Papa.parse(file, {
-            header: true,
+            //header: true,
             skipEmptyLines: true,
             complete: function(results) {
                 console.log('Parsed CSV Data:', results.data); // Log the parsed data
                 // Map CSV data to activity objects and limit to first 10
-                const activities = results.data.map(mapCsvRowToActivity).slice(0, 10);
+                const activities = results.data.map(mapCsvRowToActivity).slice(0, 100);
                 console.log('Activities after mapping:', activities); // Log the activities
                 // Initialize the dashboard with the mapped activities
                 initializeDashboard(activities);
@@ -30,13 +30,13 @@ function mapCsvRowToActivity(row) {
         start_date: row['Activity Date'],
         name: row['Activity Name'],
         type: row['Activity Type'],
-        elapsed_time: parseFloat(row['Elapsed Time']) || 0,
-        moving_time: parseFloat(row['Moving Time']) || 0,
-        distance: parseFloat(row['Distance']) || 0,
-        total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
-        average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
-        max_heartrate: parseFloat(row['Max Heart Rate']) || 0,
-        kilojoules: parseFloat(row['Calories']) || 0,
+        elapsed_time: parseFloat(row['Elapsed Time']),
+        moving_time: parseFloat(row['Moving Time']),
+        distance: parseFloat(row['Distance']),
+        total_elevation_gain: parseFloat(row['Elevation Gain']),
+        average_heartrate: parseFloat(row['Average Heart Rate']),
+        max_heartrate: parseFloat(row['Max Heart Rate']),
+        kilojoules: parseFloat(row['Calories']),
         // Add any other fields required by your dashboard functions
     };
 }
