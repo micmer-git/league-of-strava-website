@@ -1,18 +1,19 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import pandas as pd
 from werkzeug.utils import secure_filename
-import os
+import logging
 
 app = Flask(__name__)
 
 # Configuration
 ALLOWED_EXTENSIONS = {'csv'}
-# Set maximum file size to 10MB (optional)
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
 
 # [Rank configuration and achievement configuration remain unchanged]
 
-# Helper function to check allowed file extensions
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -214,6 +215,9 @@ def calculate_coins(df):
 
 def calculate_achievements(df, achievement_config):
     achievements = []
+    # Ensure 'Distance' is numeric
+    df['Distance'] = pd.to_numeric(df['Distance'], errors='coerce')
+    df = df.dropna(subset=['Distance'])
 
     # Races Achievements
     for race in achievement_config.get('races', []):
@@ -266,8 +270,37 @@ def calculate_achievements(df, achievement_config):
 
     return achievements
 
-# Load data once when the server starts
-dataframe = load_data()
+def process_dataframe(dataframe):
+    # Ensure necessary columns are present
+    required_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain', 'Average Heart Rate', 'Activity Date', 'Activity Type']
+    missing_columns = [col for col in required_columns if col not in dataframe.columns]
+    if missing_columns:
+        error = f"The following required columns are missing in the uploaded file: {', '.join(missing_columns)}"
+        return None, error
+
+    # Convert necessary columns to numeric, handling errors
+    numeric_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain', 'Average Heart Rate']
+    for col in numeric_columns:
+        dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
+
+    # Drop rows with NaN values in numeric columns
+    dataframe = dataframe.dropna(subset=numeric_columns)
+
+    # Convert 'Activity Date' to datetime
+    dataframe['Activity Date'] = pd.to_datetime(dataframe['Activity Date'], errors='coerce')
+
+    # Drop rows with invalid dates
+    dataframe = dataframe.dropna(subset=['Activity Date'])
+
+    # Ensure 'Activity Type' is a string
+    dataframe['Activity Type'] = dataframe['Activity Type'].astype(str)
+
+    # Check if DataFrame is empty
+    if dataframe.empty:
+        error = 'No valid data found after processing. Please check your CSV file.'
+        return None, error
+
+    return dataframe, None
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -286,41 +319,23 @@ def index():
             # Read the CSV file into a DataFrame
             try:
                 dataframe = pd.read_csv(file)
+                dataframe, error = process_dataframe(dataframe)
+                if error:
+                    return render_template('index.html', error=error)
+                # Proceed with processing
+                # [Include your existing data processing code here]
+                # ...
+                return render_template('dashboard.html',
+                                       user_rank=user_rank,
+                                       total_hours=total_hours,
+                                       stats=stats,
+                                       achievements_by_period=achievements_by_period,
+                                       coins_by_period=coins_by_period,
+                                       period_names=period_names,
+                                       periods=periods)
             except Exception as e:
-                error = f'Error reading CSV file: {e}'
+                error = f'An error occurred during processing: {e}'
                 return render_template('index.html', error=error)
-            # Process the DataFrame
-            periods = ['lifetime', 'last_365_days', 'ytd', 'last_30_days']
-            period_names = {
-                'lifetime': 'Lifetime',
-                'last_365_days': 'Last 365 Days',
-                'ytd': 'Year to Date',
-                'last_30_days': 'Last 30 Days'
-            }
-
-            achievements_by_period = {}
-            coins_by_period = {}
-
-            for period in periods:
-                filtered_df = get_time_filtered_df(dataframe, period)
-                achievements = calculate_achievements(filtered_df, achievement_config)
-                coins = calculate_coins(filtered_df)
-                achievements_by_period[period] = achievements
-                coins_by_period[period] = coins
-
-            # For Rank and Stats, we will use Lifetime data
-            stats = calculate_stats(dataframe)
-            total_hours = stats['total_time'] / 3600
-            user_rank = get_user_rank(total_hours, rank_config)
-
-            return render_template('dashboard.html',
-                                   user_rank=user_rank,
-                                   total_hours=total_hours,
-                                   stats=stats,
-                                   achievements_by_period=achievements_by_period,
-                                   coins_by_period=coins_by_period,
-                                   period_names=period_names,
-                                   periods=periods)
         else:
             error = 'Invalid file type. Please upload a CSV file.'
             return render_template('index.html', error=error)
