@@ -127,7 +127,7 @@ document.getElementById('upload-button').addEventListener('click', () => {
 
   uploadStatus.style.color = 'black';
   uploadStatus.textContent = 'Uploading and processing...';
-  loadingSpinner.style.display = 'block';
+  //loadingSpinner.style.display = 'block';
 
   const progressBar = document.getElementById('parse-progress');
   progressBar.style.display = 'block';
