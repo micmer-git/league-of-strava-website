@@ -1,11 +1,17 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Strava Activities Dashboard</title>
+    <title>Games of Strava</title>
     <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="/templates/styles.css">
+
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
+        body {
+          font-family: 'Montserrat', sans-serif;
+          background-color: #f4f6f8;
+          color: #333;
+        }
         h1 { color: #ff7f50; }
         .stat-label { font-weight: bold; }
         .rank-name { font-size: 24px; }
@@ -20,15 +26,14 @@
         .achievement-item, .coin-item {
             font-size: 24px;
             margin: 5px;
-            position: relative;
             cursor: pointer;
-            padding-right: 25px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         .achievement-item .badge, .coin-item .badge {
             font-size: 16px;
-            position: absolute;
-            top: -5px;
-            right: -10px;
+            margin-top: 5px;
         }
         .achievement-tooltip, .coin-tooltip {
             display: none;
@@ -51,74 +56,123 @@
         .statistics .card-body p {
             font-size: 18px;
         }
+        .rank-card .card-body {
+            display: flex;
+        }
+        .rank-card .left-column {
+            flex: 1;
+            text-align: left;
+        }
+        .rank-card .right-column {
+            flex: 1;
+            text-align: center;
+        }
+        .rank-card h3, .rank-card h2, .rank-card p {
+            text-align: left;
+        }
+        .key-coins {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .key-coins .coin-item {
+            margin-bottom: 10px;
+        }
+        .key-coins .coin-item .badge {
+            margin-top: 5px;
+        }
+        .timeline-section {
+            margin-top: 30px;
+        }
+        .timeline-section h3 {
+            margin-bottom: 15px;
+        }
+        .timeline-row {
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .timeline-column {
+            flex: 1;
+            min-width: 300px;
+            margin: 10px;
+        }
+        .timeline-column h4 {
+            text-align: center;
+        }
+        .coin-list {
+            justify-content: center;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="my-4 text-center">Strava Activities Dashboard</h1>
+        <h1 class="my-4 text-center">Games of Strava</h1>
 
         <!-- Rank -->
-        <div class="card mb-4">
-            <div class="card-body text-center">
-                <h3 class="card-title">Your Rank</h3>
-                <h2>{{ user_rank.name }} {{ user_rank.emoji }}</h2>
-                <p><strong>Total Hours:</strong> {{ total_hours | round }} hours</p>
-            </div>
-        </div>
-
-        <!-- Statistics -->
-        <div class="card mb-4 statistics">
+        <div class="card mb-4 rank-card">
             <div class="card-body">
-                <h3 class="card-title">Statistics</h3>
-                <p><strong>Total Calories Consumed:</strong> {{ stats.total_calories | round }} kcal</p>
-                <p><strong>Total Distance Covered:</strong> {{ (stats.total_distance / 1000) | round }} km</p>
-                <p><strong>Total Elapsed Time:</strong> {{ (stats.total_time / 3600) | round }} hours</p>
-                <p><strong>Total Activities:</strong> {{ stats.activity_count }}</p>
-            </div>
-        </div>
-
-        <!-- Achievements and Coins Sections -->
-        <div class="row">
-            <div class="col-md-6">
-                {% for period in ['lifetime', 'ytd'] %}
-                <div class="achievements-section">
-                    <h3>{{ period_names[period] }} - Coins</h3>
-                    {% if coins_by_period[period] %}
-                    <div class="coin-list">
-                        {% for coin in coins_by_period[period] %}
-                        <div class="coin-item">
-                            {{ coin.emoji }}
-                            <span class="badge badge-pill badge-primary">
-                                x{{ coin.count | round }}
-                            </span>
-                            <div class="coin-tooltip">
-                                {{ coin.name }}: {{ coin.count | round(2) }}
-                            </div>
-                        </div>
+                <div class="left-column">
+                    <h3 class="card-title">Your Rank</h3>
+                    <h2>{{ user_rank.name }} {{ user_rank.emoji }}</h2>
+                    <p><strong>Total Hours:</strong> {{ total_hours | int }}   hours</p>
+                    <!-- Statistics -->
+                    <p><strong>Total Calories Consumed:</strong> {{ stats.total_calories | int }}   kcal</p>
+                    <p><strong>Total Distance Covered:</strong> {{ (stats.total_distance / 1000) | int }}   km</p>
+                    <p><strong>Total Activities:</strong> {{ stats.activity_count }}</p>
+                </div>
+                <div class="right-column">
+                    <div class="key-coins">
+                        <!-- Display key coins: Everest, Heartbeat (in million beats), Pizzas -->
+                        {% for coin in coins_by_period['lifetime'] %}
+                            {% if coin.name == 'Everest Coins' %}
+                                <div class="coin-item">
+                                      {{ coin.emoji }}
+                                    <span class="badge badge-pill badge-primary">
+                                          {{ coin.count | int }}
+                                    </span>
+                                </div>
+                            {% elif coin.name == 'Heartbeat Coins' %}
+                                <div class="coin-item">
+                                      {{ coin.emoji }}
+                                    <span class="badge badge-pill badge-primary">
+                                        {{ (coin.count / 1000000) | int }}M
+                                    </span>
+                                </div>
+                            {% elif coin.name == 'Pizza Coins' %}
+                                <div class="coin-item">
+                                      {{ coin.emoji }}
+                                    <span class="badge badge-pill badge-primary">
+                                          {{ coin.count | int }}
+                                    </span>
+                                </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
-                    {% else %}
-                    <p>No coins yet. Keep going!</p>
-                    {% endif %}
                 </div>
-                {% endfor %}
             </div>
-            <div class="col-md-6">
-                {% for period in ['last_365_days', 'last_30_days'] %}
-                <div class="achievements-section">
-                    <h3>{{ period_names[period] }} - Coins</h3>
+        </div>
+
+        <!-- Coins Sections for Timelines -->
+        <div class="timeline-section">
+            <h3>Coins by Timeline</h3>
+            <div class="timeline-row">
+                {% for period in ['lifetime', 'last_365_days', 'ytd', 'last_30_days'] %}
+                <div class="timeline-column">
+                    <h4>{{ period_names[period] }}</h4>
                     {% if coins_by_period[period] %}
                     <div class="coin-list">
                         {% for coin in coins_by_period[period] %}
-                        <div class="coin-item">
-                            {{ coin.emoji }}
-                            <span class="badge badge-pill badge-primary">
-                                x{{ coin.count | round }}
-                            </span>
-                            <div class="coin-tooltip">
-                                {{ coin.name }}: {{ coin.count | round(2) }}
+                            {% if coin.name in ['Total Hours', 'Total Distance', 'Consistency Coins'] %}
+                            <div class="coin-item">
+                                  {{ coin.emoji }}
+                                <span class="badge badge-pill badge-primary">
+                                      {{ coin.count | int }}
+                                </span>
+                                <div class="coin-tooltip">
+                                      {{ coin.name }}:   {{ coin.count | int }}
+                                </div>
                             </div>
-                        </div>
+                            {% endif %}
                         {% endfor %}
                     </div>
                     {% else %}
@@ -132,26 +186,21 @@
         <!-- Achievements Badges Section -->
         <div class="achievements-section">
             <h3>Achievements Badges</h3>
-            {% for period in periods %}
-            <h4>{{ period_names[period] }}</h4>
-            {% if achievements_by_period[period] %}
             <div class="achievement-list">
-                {% for achievement in achievements_by_period[period] %}
-                <div class="achievement-item">
-                    {{ achievement.emoji }}
-                    <span class="badge badge-pill badge-primary">
-                        x{{ achievement.count | round }}
-                    </span>
-                    <div class="achievement-tooltip">
-                        {{ achievement.name }}: {{ achievement.count | round }}
+                {% for achievement in achievements_by_period['lifetime'] %}
+                    {% if achievement.category == 'Races' or achievement.category == 'Special Days' %}
+                    <div class="achievement-item">
+                        {{ achievement.emoji }}
+                        <span class="badge badge-pill badge-primary">
+                            {{ achievement.count | int }}
+                        </span>
+                        <div class="achievement-tooltip">
+                            {{ achievement.name }}: {{ achievement.count | int }}
+                        </div>
                     </div>
-                </div>
+                    {% endif %}
                 {% endfor %}
             </div>
-            {% else %}
-            <p>No achievements yet. Keep going!</p>
-            {% endif %}
-            {% endfor %}
         </div>
 
         <!-- Optional JavaScript -->
