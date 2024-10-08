@@ -1,37 +1,33 @@
 from flask import Flask, render_template
 import pandas as pd
 
-
 app = Flask(__name__)
 
-# Rank System Configuration in Python
+# Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
-    {'name': 'Bronze 3', 'emoji': '🥉', 'min_points': 0},
-    {'name': 'Bronze 2', 'emoji': '🥉', 'min_points': 150},
-    {'name': 'Bronze 1', 'emoji': '🥉', 'min_points': 300},
-    {'name': 'Silver 3', 'emoji': '🥈', 'min_points': 450},
-    {'name': 'Silver 2', 'emoji': '🥈', 'min_points': 600},
-    {'name': 'Silver 1', 'emoji': '🥈', 'min_points': 750},
-    {'name': 'Gold 3', 'emoji': '🥇', 'min_points': 900},
-    {'name': 'Gold 2', 'emoji': '🥇', 'min_points': 1050},
-    {'name': 'Gold 1', 'emoji': '🥇', 'min_points': 1200},
-    {'name': 'Platinum 3', 'emoji': '🏆', 'min_points': 1350},
-    {'name': 'Platinum 2', 'emoji': '🏆', 'min_points': 1500},
-    {'name': 'Platinum 1', 'emoji': '🏆', 'min_points': 1650},
-    {'name': 'Diamond 3', 'emoji': '💎', 'min_points': 1800},
-    {'name': 'Diamond 2', 'emoji': '💎', 'min_points': 1950},
-    {'name': 'Diamond 1', 'emoji': '💎', 'min_points': 2100},
-    {'name': 'Master 3', 'emoji': '🔥', 'min_points': 2250},
-    {'name': 'Master 2', 'emoji': '🔥', 'min_points': 2400},
-    {'name': 'Master 1', 'emoji': '🔥', 'min_points': 2550},
-    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_points': 2700},
-    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_points': 2850},
-    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_points': 3000},
-    {'name': 'Challenger', 'emoji': '🌟', 'min_points': 3150},
+    {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
+    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 5},
+    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 10},
+    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 15},
+    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 20},
+    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 25},
+    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 30},
+    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 35},
+    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 40},
+    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 45},
+    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 50},
+    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 55},
+    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 60},
+    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 65},
+    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 70},
+    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 75},
+    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 80},
+    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 85},
+    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 90},
+    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 95},
+    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 100},
+    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 105},
 ]
-
-
-
 
 # Dynamically add Master Prestige levels
 for i in range(2, 101):
@@ -42,7 +38,6 @@ for i in range(2, 101):
     })
 
 # Achievement Configuration
-# Achievement Configuration
 achievement_config = {
     'distance_badges': [
         {'name': '100 km', 'emoji': '💯', 'threshold': 100, 'count': 0},
@@ -50,13 +45,14 @@ achievement_config = {
         {'name': '300 km', 'emoji': '⚜️', 'threshold': 300, 'count': 0},
     ],
     'duration_badges': [
-        {'name': '3 Hours', 'emoji': '⌛', 'threshold': 3, 'count': 0},
+        {'name': '3 Hours', 'emoji': '⌛', 'threshold': 3, 'count': 0},  # threshold in hours
         {'name': '6 Hours', 'emoji': '⏱️', 'threshold': 6, 'count': 0},
         {'name': '12 Hours', 'emoji': '🌇', 'threshold': 12, 'count': 0},
     ],
     'special_occasions': [
         {'name': 'New Year Run', 'emoji': '🎉', 'dates': ['01-01'], 'count': 0},
         {'name': 'Christmas Run', 'emoji': '🎄', 'dates': ['12-25'], 'count': 0},
+        # Add more special occasions as needed
     ],
     'additional_achievements': [
         {
@@ -64,17 +60,18 @@ achievement_config = {
             'emoji': '4️⃣2️⃣🏃',
             'description': 'Completed a marathon (42.195 km)',
             'count': 0,
-            'type': 'Run',
-            'distance': 42195
+            'type': 'Run',  # Specify the activity type
+            'distance': 42195  # Marathon distance in meters
         },
         {
             'name': 'Half Marathon Master',
             'emoji': '️2️⃣1️⃣🏃',
             'description': 'Completed a half marathon (21.0975 km)',
             'count': 0,
-            'type': 'Run',
-            'distance': 21097.5
+            'type': 'Run',  # Specify the activity type
+            'distance': 21097.5  # Half marathon distance in meters
         },
+        # Add other achievements as needed
     ]
 }
 
@@ -84,7 +81,7 @@ def load_data():
     df = pd.read_csv('activities.csv')
 
     # Convert necessary columns to numeric, handling errors
-    numeric_columns = ['Calories', 'Distance', 'Elapsed Time', 'Average Speed', 'Elevation Gain', 'Max Heart Rate', 'Average Heart Rate']
+    numeric_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain', 'Max Heart Rate', 'Average Heart Rate']
     for col in numeric_columns:
         df[col] = pd.to_numeric(df[col], errors='coerce')
 
@@ -93,13 +90,27 @@ def load_data():
 
     return df
 
+def get_time_filtered_df(df, period):
+    now = pd.Timestamp.now()
+    if period == 'lifetime':
+        return df
+    elif period == 'last_year':
+        start_date = now - pd.DateOffset(years=1)
+    elif period == 'ytd':
+        start_date = pd.Timestamp(year=now.year, month=1, day=1)
+    elif period == 'last_30_days':
+        start_date = now - pd.Timedelta(days=30)
+    else:
+        return df  # Default to lifetime
+    filtered_df = df[df['Activity Date'] >= start_date]
+    return filtered_df
+
 # Calculate summary statistics
 def calculate_stats(df):
     stats = {
         'total_calories': df['Calories'].sum(),
         'total_distance': df['Distance'].sum(),  # Assuming distance is in meters
         'total_time': df['Elapsed Time'].sum(),  # Assuming time is in seconds
-        'average_speed': df['Average Speed'].mean(),
         'activity_count': df.shape[0],
     }
     return stats
@@ -120,7 +131,6 @@ def calculate_coins(df):
 
     # Ensure necessary columns are numeric
     df['Total Elevation Gain'] = pd.to_numeric(df['Elevation Gain'], errors='coerce').fillna(0)
-    df['Max Heart Rate'] = pd.to_numeric(df['Max Heart Rate'], errors='coerce').fillna(0)
     df['Average Heart Rate'] = pd.to_numeric(df['Average Heart Rate'], errors='coerce').fillna(0)
 
     # Estimate total heartbeats if average heart rate is available
@@ -135,11 +145,11 @@ def calculate_coins(df):
     pizza_coins = total_calories / PIZZA_CALORIES
     heartbeat_coins = total_heartbeats / HEARTBEAT_UNIT
 
-    coins = {
-        'everest_coins': everest_coins,
-        'pizza_coins': pizza_coins,
-        'heartbeat_coins': heartbeat_coins
-    }
+    coins = [
+        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': everest_coins},
+        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': pizza_coins},
+        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': heartbeat_coins}
+    ]
 
     return coins
 
@@ -193,33 +203,47 @@ def calculate_achievements(df, achievement_config):
 
     return achievements
 
-
-
-def filter_activities_by_timeframe(df, timeframe):
-    now = pd.Timestamp.now()
-    if timeframe == 'weekly':
-        start_date = now - pd.Timedelta(days=7)
-    elif timeframe == 'last6months':
-        start_date = now - pd.DateOffset(months=6)
-    elif timeframe == 'lastyear':
-        start_date = now - pd.DateOffset(years=1)
-    else:
-        return df  # All time
-
-    filtered_df = df[df['Activity Date'] >= start_date]
-    return filtered_df
-
 # Load data once when the server starts
 dataframe = load_data()
-stats = calculate_stats(dataframe)
-total_hours = stats['total_time'] / 3600
-user_rank = get_user_rank(total_hours, rank_config)
-coins = calculate_coins(dataframe)
-achievements = calculate_achievements(dataframe, achievement_config)
 
 @app.route('/')
 def index():
-    return render_template('index.html', stats=stats, user_rank=user_rank, total_hours=total_hours, coins=coins, achievements=achievements)
+    periods = ['lifetime', 'last_year', 'ytd', 'last_30_days']
+    period_names = {
+        'lifetime': 'Lifetime',
+        'last_year': 'Last Year',
+        'ytd': 'Year to Date',
+        'last_30_days': 'Last 30 Days'
+    }
+
+    achievements_by_period = {}
+
+    for period in periods:
+        filtered_df = get_time_filtered_df(dataframe, period)
+        achievements = calculate_achievements(filtered_df, achievement_config)
+        coins = calculate_coins(filtered_df)
+        # Include coins in achievements
+        coins_as_achievements = []
+        for coin in coins:
+            coins_as_achievements.append({
+                'name': coin['name'],
+                'emoji': coin['emoji'],
+                'count': coin['count']
+            })
+        # Combine achievements and coins
+        achievements_by_period[period] = achievements + coins_as_achievements
+
+    # For Rank and Stats, we will use Lifetime data
+    stats = calculate_stats(dataframe)
+    total_hours = stats['total_time'] / 3600
+    user_rank = get_user_rank(total_hours, rank_config)
+
+    return render_template('index.html',
+                           user_rank=user_rank,
+                           total_hours=total_hours,
+                           stats=stats,
+                           achievements_by_period=achievements_by_period,
+                           period_names=period_names)
 
 if __name__ == '__main__':
     app.run(debug=True)
