@@ -175,18 +175,6 @@ function mapCSVToActivities(csvData) {
   return csvData.map(row => {
     const activity = {
       id: row['Activity ID'],
-      start_date: parseDate(row['Activity Date']),
-      name: row['Activity Name'],
-      type: row['Activity Type'] || 'Ride',
-      moving_time: parseInt(row['Moving Time']) || 0,
-      distance: parseFloat(row['Distance']) || 0,
-      total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
-      average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
-      kilojoules: parseFloat(row['Calories']) || 0,
-      athlete: {
-        firstname: 'John',
-        lastname: 'Doe'
-      }
     };
 
     // Remove debugging console.log if not needed
