@@ -231,6 +231,8 @@
     <h2>Upload Your Activity CSV</h2>
     <input type="file" id="csv-file-input" accept=".csv" />
     <button id="upload-button">Upload and Load Dashboard</button>
+    <progress id="parse-progress" value="0" max="100" style="width: 100%; display: none;"></progress>
+
     <p id="upload-status"></p>
   </div>
 
@@ -276,6 +278,14 @@
           <div class="coin" title="Distance: 100km per icon">
             <span id="distance-value">0</span> 🚴
             <div class="week-gain bold-green" id="distance-week-gain"></div>
+          </div>
+          <div class="coin" title="Elevation">
+            <span id="elevation-value">0</span> 🗻
+            <div class="week-gain bold-green" id="elevation-week-gain"></div>
+          </div>
+          <div class="coin" title="Calories Burned">
+            <span id="calories-value">0</span> 🔥
+            <div class="week-gain bold-green" id="calories-week-gain"></div>
           </div>
         </div>
       </div>

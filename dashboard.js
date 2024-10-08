@@ -129,9 +129,18 @@ document.getElementById('upload-button').addEventListener('click', () => {
   uploadStatus.textContent = 'Uploading and processing...';
   loadingSpinner.style.display = 'block';
 
+  const progressBar = document.getElementById('parse-progress');
+  progressBar.style.display = 'block';
+
   Papa.parse(file, {
     header: true,
     skipEmptyLines: true,
+    chunkSize: 1024 * 1024, // 1MB chunk size
+    step: function(results, parser) {
+      // Update progress bar based on bytes processed
+      const progress = Math.min(100, Math.round((parser.streamer._inputStream._pos / file.size) * 100));
+      progressBar.value = progress;
+    },
     complete: function(results) {
       console.log('CSV Parsing Results:', results);
       const activities = mapCSVToActivities(results.data);
@@ -194,6 +203,7 @@ function initializeDashboard(activities) {
   hasMoreActivities = false; // Since all data is loaded from CSV
   displayActivities(allActivities, true);
   updateTotalsAndRanks();
+  document.getElementById('loading').style.display = 'none';
 
   // Hide or show "Load More" button based on hasMoreActivities
   const loadMoreButton = document.getElementById('load-more-button');
@@ -204,7 +214,7 @@ function initializeDashboard(activities) {
   }
 
   // Show dashboard sections
-  document.querySelectorAll('.overview-section, .rank-section, .weekly-stats, .achievements-section').forEach(section => {
+  document.querySelectorAll('.overview-section, .rank-section, .weekly-stats, .achievements-section, .max-metrics, .timeframe-switch').forEach(section => {
     section.style.display = 'block';
   });
 }
@@ -588,6 +598,8 @@ function updateDashboardStats(totals) {
   const elevationWeekGainElement = document.getElementById('elevation-week-gain');
   const caloriesValueElement = document.getElementById('calories-value');
   const caloriesWeekGainElement = document.getElementById('calories-week-gain');
+
+
 
   if (!distanceValueElement || !distanceWeekGainElement || !elevationValueElement || !elevationWeekGainElement || !caloriesValueElement || !caloriesWeekGainElement) {
     console.error('One or more lifetime stats DOM elements are missing.');
