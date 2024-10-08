@@ -1,7 +1,17 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 import pandas as pd
+from werkzeug.utils import secure_filename
+import logging
+import os
 
 app = Flask(__name__)
+
+# Configuration
+ALLOWED_EXTENSIONS = {'csv'}
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
 
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
@@ -49,11 +59,6 @@ achievement_config = {
         {'name': '6 Hours', 'emoji': '⏱️', 'threshold': 6, 'count': 0},
         {'name': '12 Hours', 'emoji': '🌇', 'threshold': 12, 'count': 0},
     ],
-    'special_occasions': [
-        {'name': 'New Year Run', 'emoji': '🎉', 'dates': ['01-01'], 'count': 0},
-        {'name': 'Christmas Run', 'emoji': '🎄', 'dates': ['12-25'], 'count': 0},
-        # Add more special occasions as needed
-    ],
     'additional_achievements': [
         {
             'name': 'Marathon Master',
@@ -75,36 +80,37 @@ achievement_config = {
     ]
 }
 
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 # Load and preprocess the CSV data
-def load_data():
-    # Adjust the file path if necessary
-    df = pd.read_csv('activities.csv')
+def process_dataframe(dataframe):
+    # Ensure necessary columns are present
+    required_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain',
+                        'Max Heart Rate', 'Average Heart Rate', 'Activity Type']
+    missing_columns = [col for col in required_columns if col not in dataframe.columns]
+    if missing_columns:
+        error = f"The following required columns are missing in the uploaded file: {', '.join(missing_columns)}"
+        return None, error
 
     # Convert necessary columns to numeric, handling errors
     numeric_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain', 'Max Heart Rate', 'Average Heart Rate']
     for col in numeric_columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')
+        dataframe[col] = pd.to_numeric(dataframe[col], errors='coerce')
 
-    # Convert dates to datetime objects
-    df['Activity Date'] = pd.to_datetime(df['Activity Date'], errors='coerce')
+    # Drop rows with NaN values in numeric columns
+    dataframe = dataframe.dropna(subset=numeric_columns).copy()
 
-    return df
+    # Ensure 'Activity Type' is a string
+    dataframe['Activity Type'] = dataframe['Activity Type'].astype(str)
 
-def get_time_filtered_df(df, period):
-    now = pd.Timestamp.now()
-    if period == 'lifetime':
-        return df.copy()
-    elif period == 'last_365_days':
-        start_date = now - pd.Timedelta(days=365)
-    elif period == 'ytd':
-        start_date = pd.Timestamp(year=now.year, month=1, day=1)
-    elif period == 'last_30_days':
-        start_date = now - pd.Timedelta(days=30)
-    else:
-        return df.copy()  # Default to lifetime
-    filtered_df = df[df['Activity Date'] >= start_date].copy()
-    return filtered_df
+    # Check if DataFrame is empty
+    if dataframe.empty:
+        error = 'No valid data found after processing. Please check your CSV file.'
+        return None, error
 
+    return dataframe, None
 
 # Calculate summary statistics
 def calculate_stats(df):
@@ -147,14 +153,14 @@ def calculate_coins(df):
     pizza_coins = total_calories / PIZZA_CALORIES
     heartbeat_coins = total_heartbeats / HEARTBEAT_UNIT
 
-    # New coins
+    # New coins (optional, can be removed if not needed)
     climber_coin = len(df[df['Total Elevation Gain'] > 1000])
     michelin_star_coin = len(df[df['Calories'] > 2000])
 
     coins = [
-        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': everest_coins},
-        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': pizza_coins},
-        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': heartbeat_coins},
+        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': round(everest_coins, 2)},
+        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': round(pizza_coins, 2)},
+        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': round(heartbeat_coins, 2)},
         {'name': 'Climber Activities', 'emoji': '⛰️', 'count': climber_coin},
         {'name': 'Michelin Star Burner', 'emoji': '🔥', 'count': michelin_star_coin}
     ]
@@ -188,7 +194,10 @@ def calculate_achievements(df, achievement_config):
 
     # Marathon and Half Marathon
     for achievement in achievement_config['additional_achievements']:
-        completed_activities = df[(df['Activity Type'] == achievement['type']) & (df['Distance'] >= achievement['distance'])]
+        completed_activities = df[
+            (df['Activity Type'].str.lower() == achievement['type'].lower()) &
+            (df['Distance'] >= achievement['distance'])
+        ]
         achievement_count = len(completed_activities)
         if achievement_count > 0:
             achievements.append({
@@ -197,79 +206,56 @@ def calculate_achievements(df, achievement_config):
                 'count': achievement_count
             })
 
-    # Special Occasions
-    df['Activity Date String'] = df['Activity Date'].dt.strftime('%m-%d')
-    for occasion in achievement_config['special_occasions']:
-        occasion_activities = df[df['Activity Date String'].isin(occasion['dates'])]
-        occasion_count = len(occasion_activities)
-        if occasion_count > 0:
-            achievements.append({
-                'name': occasion['name'],
-                'emoji': occasion['emoji'],
-                'count': occasion_count
-            })
-
-    # Triathlon Achievements
-    df['Date'] = df['Activity Date'].dt.date
-    dates = df['Date'].unique()
-    for triathlon in achievement_config.get('triathlon_achievements', []):
-        count = 0
-        for date in dates:
-            day_activities = df[df['Date'] == date]
-            # Check for Swim, Ride, Run
-            swim_distance = day_activities[day_activities['Activity Type'] == 'Swim']['Distance'].sum()
-            ride_distance = day_activities[day_activities['Activity Type'] == 'Ride']['Distance'].sum()
-            run_distance = day_activities[day_activities['Activity Type'] == 'Run']['Distance'].sum()
-            distances = triathlon['distances']
-            if (swim_distance >= distances.get('Swim', 0) and
-                ride_distance >= distances.get('Ride', 0) and
-                run_distance >= distances.get('Run', 0)):
-                count += 1
-        if count > 0:
-            achievements.append({
-                'name': triathlon['name'],
-                'emoji': triathlon['emoji'],
-                'count': count
-            })
-
     return achievements
 
-# Load data once when the server starts
-dataframe = load_data()
-
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    periods = ['lifetime', 'ytd', 'last_365_days', 'last_30_days']
-    period_names = {
-        'lifetime': 'Lifetime',
-        'last_365_days': 'Last 365 Days',
-        'ytd': 'Year to Date',
-        'last_30_days': 'Last 30 Days'
-    }
+    if request.method == 'POST':
+        # Check if the POST request has the file part
+        if 'file' not in request.files:
+            error = 'No file part in the request.'
+            return render_template('index.html', error=error)
+        file = request.files['file']
+        # If the user does not select a file
+        if file.filename == '':
+            error = 'No file selected.'
+            return render_template('index.html', error=error)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Optionally, save the file to a temporary location
+            # file.save(os.path.join('uploads', filename))
+            try:
+                dataframe = pd.read_csv(file)
+                dataframe, error = process_dataframe(dataframe)
+                if error:
+                    return render_template('index.html', error=error)
 
-    achievements_by_period = {}
-    coins_by_period = {}
+                # Proceed with processing
+                achievements = calculate_achievements(dataframe, achievement_config)
+                coins = calculate_coins(dataframe)
+                stats = calculate_stats(dataframe)
+                total_hours = stats['total_time'] / 3600
+                user_rank = get_user_rank(total_hours, rank_config)
 
-    for period in periods:
-        filtered_df = get_time_filtered_df(dataframe, period)
-        achievements = calculate_achievements(filtered_df, achievement_config)
-        coins = calculate_coins(filtered_df)
-        # Keep coins and achievements separate
-        achievements_by_period[period] = achievements
-        coins_by_period[period] = coins
-
-    # For Rank and Stats, we will use Lifetime data
-    stats = calculate_stats(dataframe)
-    total_hours = stats['total_time'] / 3600
-    user_rank = get_user_rank(total_hours, rank_config)
-
-    return render_template('index.html',
-                           user_rank=user_rank,
-                           total_hours=total_hours,
-                           stats=stats,
-                           achievements_by_period=achievements_by_period,
-                           coins_by_period=coins_by_period,
-                           period_names=period_names)
+                # Now render the dashboard template
+                return render_template('dashboard.html',
+                                       user_rank=user_rank,
+                                       total_hours=round(total_hours, 2),
+                                       stats=stats,
+                                       achievements=achievements,
+                                       coins=coins)
+            except Exception as e:
+                logging.exception("Error processing the file.")
+                error = f'An error occurred during processing: {e}'
+                return render_template('index.html', error=error)
+        else:
+            error = 'Invalid file type. Please upload a CSV file.'
+            return render_template('index.html', error=error)
+    else:
+        # GET request, show the file upload form
+        return render_template('index.html')
 
 if __name__ == '__main__':
+    # Ensure the 'uploads' directory exists if you plan to save files
+    # os.makedirs('uploads', exist_ok=True)
     app.run(debug=True)
