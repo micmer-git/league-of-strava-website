@@ -1,7 +1,22 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for
 import pandas as pd
+from werkzeug.utils import secure_filename
+import os
 
 app = Flask(__name__)
+
+# Configuration
+ALLOWED_EXTENSIONS = {'csv'}
+# Set maximum file size to 10MB (optional)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
+
+# [Rank configuration and achievement configuration remain unchanged]
+
+# Helper function to check allowed file extensions
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
@@ -254,39 +269,64 @@ def calculate_achievements(df, achievement_config):
 # Load data once when the server starts
 dataframe = load_data()
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    periods = ['lifetime', 'last_365_days', 'ytd', 'last_30_days']
-    period_names = {
-        'lifetime': 'Lifetime',
-        'last_365_days': 'Last 365 Days',
-        'ytd': 'Year to Date',
-        'last_30_days': 'Last 30 Days'
-    }
+    if request.method == 'POST':
+        # Check if the POST request has the file part
+        if 'file' not in request.files:
+            error = 'No file part in the request.'
+            return render_template('index.html', error=error)
+        file = request.files['file']
+        # If the user does not select a file
+        if file.filename == '':
+            error = 'No file selected.'
+            return render_template('index.html', error=error)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            # Read the CSV file into a DataFrame
+            try:
+                dataframe = pd.read_csv(file)
+            except Exception as e:
+                error = f'Error reading CSV file: {e}'
+                return render_template('index.html', error=error)
+            # Process the DataFrame
+            periods = ['lifetime', 'last_365_days', 'ytd', 'last_30_days']
+            period_names = {
+                'lifetime': 'Lifetime',
+                'last_365_days': 'Last 365 Days',
+                'ytd': 'Year to Date',
+                'last_30_days': 'Last 30 Days'
+            }
 
-    achievements_by_period = {}
-    coins_by_period = {}
+            achievements_by_period = {}
+            coins_by_period = {}
 
-    for period in periods:
-        filtered_df = get_time_filtered_df(dataframe, period)
-        achievements = calculate_achievements(filtered_df, achievement_config)
-        coins = calculate_coins(filtered_df)
-        achievements_by_period[period] = achievements
-        coins_by_period[period] = coins
+            for period in periods:
+                filtered_df = get_time_filtered_df(dataframe, period)
+                achievements = calculate_achievements(filtered_df, achievement_config)
+                coins = calculate_coins(filtered_df)
+                achievements_by_period[period] = achievements
+                coins_by_period[period] = coins
 
-    # For Rank and Stats, we will use Lifetime data
-    stats = calculate_stats(dataframe)
-    total_hours = stats['total_time'] / 3600
-    user_rank = get_user_rank(total_hours, rank_config)
+            # For Rank and Stats, we will use Lifetime data
+            stats = calculate_stats(dataframe)
+            total_hours = stats['total_time'] / 3600
+            user_rank = get_user_rank(total_hours, rank_config)
 
-    return render_template('index.html',
-                           user_rank=user_rank,
-                           total_hours=total_hours,
-                           stats=stats,
-                           achievements_by_period=achievements_by_period,
-                           coins_by_period=coins_by_period,
-                           period_names=period_names,
-                           periods=periods)
+            return render_template('dashboard.html',
+                                   user_rank=user_rank,
+                                   total_hours=total_hours,
+                                   stats=stats,
+                                   achievements_by_period=achievements_by_period,
+                                   coins_by_period=coins_by_period,
+                                   period_names=period_names,
+                                   periods=periods)
+        else:
+            error = 'Invalid file type. Please upload a CSV file.'
+            return render_template('index.html', error=error)
+    else:
+        # GET request, show the file upload form
+        return render_template('index.html')
 
 if __name__ == '__main__':
     app.run()
