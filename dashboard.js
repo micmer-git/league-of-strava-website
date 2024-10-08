@@ -73,7 +73,7 @@ for (let i = 2; i <= 100; i++) {
   rankConfig.push({
     name: `Master Prestige ${i}`,
     emoji: '⭐',
-    minPoints: 3150 + (i - 1) * 75, // Each level now requires 75 additional points
+    minPoints: 3150 + (i - 1) * 200, // Each level now requires 75 additional points
   });
 }
 
