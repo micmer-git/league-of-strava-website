@@ -1,8 +1,3 @@
-// Global Variables
-let currentPage = 1;
-const perPage = 200;
-let hasMoreActivities = true;
-
 // Rank System Configuration
 const rankConfig = [
   { name: 'Bronze 3', emoji: '🥉', minPoints: 0 },
