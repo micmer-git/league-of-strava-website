@@ -185,26 +185,21 @@ function mapCSVToActivities(csvData) {
       name: row['Activity Name'],
       type: row['Activity Type'] || 'Ride',
       moving_time: parseInt(row['Moving Time']) || 0,
-      distance: parseFloat(row['Distance_1']) || 0, // Updated to 'Distance_1'
+      distance: parseFloat(row['Distance']) || 0,
       total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
       average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
-      kilojoules: parseFloat(row['Calories']) * 4.184 || 0,
+      kilojoules: parseFloat(row['Calories']) || 0,
       athlete: {
         firstname: 'John',
         lastname: 'Doe'
       }
     };
 
-    console.log('Mapping Activity:', activity); // Debugging
+    // Remove debugging console.log if not needed
+    // console.log('Mapping Activity:', activity);
 
     return activity;
-  }).filter(activity => {
-    if (!activity.id || !activity.name) {
-      console.warn('Filtering out activity due to missing id or name:', activity);
-      return false;
-    }
-    return true;
-  });
+  }).filter(activity => activity.id && activity.name);
 }
 
 // Helper function to parse date strings into ISO format
