@@ -1,5 +1,3 @@
-// dashboard.js
-
 // Global Variables
 let allActivities = [];
 let currentPage = 1;
@@ -169,23 +167,34 @@ document.getElementById('upload-button').addEventListener('click', () => {
 // Function to map CSV data to activity objects expected by the dashboard
 function mapCSVToActivities(csvData) {
   return csvData.map(row => {
-    return {
+    const activity = {
       id: row['Activity ID'],
       start_date: parseDate(row['Activity Date']),
       name: row['Activity Name'],
-      type: row['Activity Type'] || 'Ride', // Default to 'Ride' if not specified
-      moving_time: parseInt(row['Moving Time']) || 0, // in seconds
-      distance: parseFloat(row['Distance']) * 1000 || 0, // Convert km to meters
-      total_elevation_gain: parseFloat(row['Elevation Gain']) || 0, // in meters
+      type: row['Activity Type'] || 'Ride',
+      moving_time: parseInt(row['Moving Time']) || 0,
+      distance: parseFloat(row['Distance 2']) * 1000 || 0,
+      total_elevation_gain: parseFloat(row['Elevation Gain']) || 0,
       average_heartrate: parseFloat(row['Average Heart Rate']) || 0,
-      kilojoules: parseFloat(row['Calories']) || 0, // Assuming 'Calories' are in kilojoules
+      kilojoules: parseFloat(row['Calories']) * 4.184 || 0,
       athlete: {
-        firstname: 'John', // Placeholder, modify as needed
-        lastname: 'Doe'     // Placeholder, modify as needed
+        firstname: 'John',
+        lastname: 'Doe'
       }
     };
-  }).filter(activity => activity.id && activity.name); // Filter out invalid entries
+
+    console.log('Mapping Activity:', activity); // Add this line
+
+    return activity;
+  }).filter(activity => {
+    if (!activity.id || !activity.name) {
+      console.warn('Filtering out activity due to missing id or name:', activity);
+      return false;
+    }
+    return true;
+  });
 }
+
 
 // Helper function to parse date strings into ISO format
 function parseDate(dateStr) {
@@ -934,7 +943,96 @@ function hideTooltip() {
   }
 }
 
-// Initialize tooltip listeners on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', () => {
+  // Your existing JavaScript code here
+
+  // Event Listener for CSV Upload Button
+  const uploadButton = document.getElementById('upload-button');
+  if (uploadButton) {
+    uploadButton.addEventListener('click', () => {
+      const fileInput = document.getElementById('csv-file-input');
+      const file = fileInput.files[0];
+      const uploadStatus = document.getElementById('upload-status');
+      const progressBar = document.getElementById('parse-progress');
+      const loadingSpinner = document.getElementById('loading-spinner'); // Ensure this exists or remove if not needed
+      const errorMessage = document.getElementById('error-message');
+
+      if (!file) {
+        alert('Please select a CSV file to upload.');
+        return;
+      }
+
+      uploadStatus.style.color = 'black';
+      uploadStatus.textContent = 'Uploading and processing...';
+      if (progressBar) {
+        progressBar.style.display = 'block';
+        progressBar.value = 0;
+      }
+      if (loadingSpinner) {
+        loadingSpinner.style.display = 'block';
+      }
+      if (errorMessage) {
+        errorMessage.style.display = 'none';
+        errorMessage.textContent = '';
+      }
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        step: function(row, parser) {
+          // Update progress bar
+          if (progressBar && file.size) {
+            const progress = Math.min(100, Math.round((parser.streamer._inputStream._pos / file.size) * 100));
+            progressBar.value = progress;
+          }
+        },
+        complete: function(results) {
+          console.log('CSV Parsing Results:', results);
+          console.log('Parsed Data:', results.data); // Add this line
+          const activities = mapCSVToActivities(results.data);
+          console.log('Mapped Activities:', activities); // Add this line
+          if (activities.length === 0) {
+            if (uploadStatus) {
+              uploadStatus.style.color = 'red';
+              uploadStatus.textContent = 'No valid activities found in the CSV.';
+            }
+            if (progressBar) progressBar.style.display = 'none';
+            if (loadingSpinner) loadingSpinner.style.display = 'none';
+            return;
+          }
+          initializeDashboard(activities);
+          if (uploadStatus) {
+            uploadStatus.style.color = 'green';
+            uploadStatus.textContent = 'Dashboard loaded successfully!';
+          }
+          if (progressBar) progressBar.style.display = 'none';
+          if (loadingSpinner) loadingSpinner.style.display = 'none';
+          if (document.getElementById('dashboard-container')) {
+            document.getElementById('dashboard-container').style.display = 'block';
+          }
+          if (document.getElementById('csv-upload-section')) {
+            document.getElementById('csv-upload-section').style.display = 'none';
+          }
+        },
+        error: function(err) {
+          console.error('Error parsing CSV:', err);
+          if (uploadStatus) {
+            uploadStatus.style.color = 'red';
+            uploadStatus.textContent = 'Error parsing CSV file.';
+          }
+          if (progressBar) progressBar.style.display = 'none';
+          if (loadingSpinner) loadingSpinner.style.display = 'none';
+          if (errorMessage) {
+            errorMessage.textContent = 'An error occurred while parsing the CSV file.';
+            errorMessage.style.display = 'block';
+          }
+        }
+      });
+    });
+  } else {
+    console.error('Upload button not found.');
+  }
+
+  // Initialize tooltip listeners
   addTooltipListeners();
 });
