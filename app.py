@@ -13,6 +13,37 @@ app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
 
+# Sample user data
+users = [
+    {
+        'username': 'Alice',
+        'rank': {'name': 'Gold 1', 'emoji': '🥇'},
+        'coins': [
+            {'name': 'Everest Coins', 'emoji': '🏔️', 'count': 5.0},
+            {'name': 'Pizza Coins', 'emoji': '🍕', 'count': 10},
+            {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': '15.0M'},
+        ],
+        'achievements': [
+            {'name': 'Marathon Master', 'emoji': '4️⃣2️⃣🏃', 'count': 1},
+            {'name': 'Climbing King', 'emoji': '🧗‍♂️', 'count': 3},
+        ]
+    },
+    {
+        'username': 'Bob',
+        'rank': {'name': 'Silver 2', 'emoji': '🥈'},
+        'coins': [
+            {'name': 'Everest Coins', 'emoji': '🏔️', 'count': 2.5},
+            {'name': 'Pizza Coins', 'emoji': '🍕', 'count': 8},
+            {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': '10.0M'},
+        ],
+        'achievements': [
+            {'name': 'Half Marathon Master', 'emoji': '2️⃣1️⃣🏃', 'count': 2},
+            {'name': 'Speedster', 'emoji': '🏎️', 'count': 1},
+        ]
+    },
+    # Add more users as needed
+]
+
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
     {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
@@ -424,6 +455,8 @@ def calculate_hours_total(df):
     total_hours = df['Elapsed Time'].sum() / 3600
     return round(total_hours, 2)
 
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -475,6 +508,16 @@ def index():
     else:
         # GET request, show the file upload form
         return render_template('index.html')
+
+
+
+# Route for the leaderboard
+@app.route('/leaderboard')
+def leaderboard():
+    # Sort users by rank
+    rank_order = {rank['name']: index for index, rank in enumerate(rank_config)}
+    sorted_users = sorted(users, key=lambda x: rank_order.get(x['rank']['name'], len(rank_order)))
+    return render_template('leaderboard.html', users=sorted_users)
 
 if __name__ == '__main__':
     # Ensure the 'uploads' directory exists if you plan to save files
