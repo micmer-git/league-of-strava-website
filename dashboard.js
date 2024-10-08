@@ -1,24 +1,3 @@
-document.getElementById('csv-file-input').addEventListener('change', function(e) {
-    const file = e.target.files[0];
-
-    if (file) {
-        Papa.parse(file, {
-            header: true,
-            skipEmptyLines: true,
-            complete: function(results) {
-                // Map CSV data to activity objects
-                const activities = results.data.map(mapCsvRowToActivity);
-                console.log('Activities:', activities); // Log the activities
-                // Initialize the dashboard with the mapped activities
-                initializeDashboard(activities);
-            },
-            error: function(err) {
-                console.error('Error parsing CSV:', err);
-            }
-        });
-    }
-});
-
 document.getElementById('upload-button').addEventListener('click', function() {
     const fileInput = document.getElementById('csv-file-input');
     const file = fileInput.files[0];
@@ -29,9 +8,10 @@ document.getElementById('upload-button').addEventListener('click', function() {
             header: true,
             skipEmptyLines: true,
             complete: function(results) {
-                // Map CSV data to activity objects
-                const activities = results.data.map(mapCsvRowToActivity);
-                console.log('Activities:', activities.slice(0, 10)); // Log first 10 activities
+                console.log('Parsed CSV Data:', results.data); // Log the parsed data
+                // Map CSV data to activity objects and limit to first 10
+                const activities = results.data.map(mapCsvRowToActivity).slice(0, 10);
+                console.log('Activities after mapping:', activities); // Log the activities
                 // Initialize the dashboard with the mapped activities
                 initializeDashboard(activities);
             },
@@ -43,7 +23,6 @@ document.getElementById('upload-button').addEventListener('click', function() {
         console.error('No file selected.');
     }
 });
-
 function mapCsvRowToActivity(row) {
     console.log('Mapping row:', row); // Debugging
     return {
