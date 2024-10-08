@@ -6,11 +6,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- Link to your CSS file -->
   <link rel="stylesheet" href="styles.css">
-  <!-- Include PapaParse -->
+  <!-- Include PapaParse via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js" integrity="sha512-+dHRbE70ttgo3RUDcxYbduXR5EBsYdVxZJi2j3uixxB9Gek4kLwAN7zrHULYQvoM49vczv5XYpgMRjWxMBuF7g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <style>
-    /* Your existing CSS styles */
-    /* ... (existing styles) ... */
+    /* Existing Styles */
+    /* ... (Your existing CSS styles) ... */
 
     /* CSV Upload Section Styles */
     #csv-upload-section {
@@ -28,6 +28,7 @@
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 16px;
     }
 
     #upload-button:hover {
@@ -39,6 +40,23 @@
       font-weight: bold;
       color: green;
     }
+
+    /* Optional: Loading Spinner */
+    #loading-spinner {
+      display: none;
+      margin: 20px auto;
+      border: 8px solid #f3f3f3;
+      border-top: 8px solid #007bff;
+      border-radius: 50%;
+      width: 60px;
+      height: 60px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -48,6 +66,7 @@
     <input type="file" id="csv-file-input" accept=".csv" />
     <button id="upload-button">Upload and Load Dashboard</button>
     <p id="upload-status"></p>
+    <div id="loading-spinner"></div>
   </div>
 
   <!-- Dashboard Container (Initially Hidden) -->
@@ -56,7 +75,6 @@
     <div id="loading">Loading your dashboard...</div>
 
     <!-- Header Section: Athlete Info and Coins -->
-    <!-- Overview Section: Two Columns -->
     <div class="overview-section" style="display: none;">
       <div class="overview-left">
         <div class="athlete-info">
@@ -92,7 +110,7 @@
           </div>
           <div class="coin" title="Distance: 100km per icon">
             <span id="distance-value">0</span> 🚴
-            <div class="week-gain bold-green" id="elevation-week-gain"></div>
+            <div class="week-gain bold-green" id="distance-week-gain"></div>
           </div>
         </div>
       </div>
@@ -146,6 +164,12 @@
           <span id="weekly-elevation">-- m</span>
           <h4>Calories Burned</h4>
           <span id="weekly-calories">-- kcal</span>
+        </div>
+        <div class="stat-card" id="coins-gained-card" style="display: none;">
+          <h3>Coins Gained</h3>
+          <p>Everest Coins: <span id="coins-everest-gained">0.0</span> 🏔️</p>
+          <p>Pizza Coins: <span id="coins-pizza-gained">0.0</span> 🍕</p>
+          <p>Heartbeat Coins: <span id="coins-heartbeat-gained">0</span> ❤️</p>
         </div>
       </div>
     </div>
