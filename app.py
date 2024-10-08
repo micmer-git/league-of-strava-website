@@ -16,27 +16,27 @@ logging.basicConfig(level=logging.INFO)
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
     {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
-    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 5},
-    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 10},
-    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 15},
-    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 20},
-    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 25},
-    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 30},
-    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 35},
-    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 40},
-    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 45},
-    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 50},
-    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 55},
-    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 60},
-    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 65},
-    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 70},
-    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 75},
-    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 80},
-    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 85},
-    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 90},
-    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 95},
-    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 100},
-    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 105},
+    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 50},
+    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 100},
+    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 150},
+    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 200},
+    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 250},
+    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 300},
+    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 350},
+    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 400},
+    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 450},
+    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 500},
+    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 550},
+    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 600},
+    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 650},
+    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 700},
+    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 750},
+    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 800},
+    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 850},
+    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 900},
+    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 950},
+    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 1000},
+    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 1050},
 ]
 
 # Dynamically add Master Prestige levels
@@ -44,7 +44,7 @@ for i in range(2, 101):
     rank_config.append({
         'name': f'Master Prestige {i}',
         'emoji': '⭐',
-        'min_hours': 105 + (i - 1) * 5  # Each level requires 5 additional hours
+        'min_hours': 1050 + (i - 1) * 100  # Each level requires 5 additional hours
     })
 
 # Achievement Configuration
