@@ -1,46 +1,77 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Activity Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; background-color: #f9f9f9; }
-        .container { width: 80%; margin: auto; padding: 20px; }
-        .section { background-color: white; padding: 20px; margin-bottom: 20px; box-shadow: 0px 0px 5px rgba(0,0,0,0.1); }
-        h2 { border-bottom: 2px solid #ddd; padding-bottom: 10px; }
-        .rank { font-size: 2em; text-align: center; }
-        .stats, .coins, .achievements { display: flex; flex-wrap: wrap; justify-content: space-around; }
-        .card { width: 30%; background-color: #eef; padding: 15px; margin: 10px; border-radius: 5px; text-align: center; }
-        .card h3 { margin-bottom: 10px; }
-    </style>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for Additional Icons (Optional) -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/styles.css') }}" rel="stylesheet">
+    <!-- Google Fonts - Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <!-- User Rank Section -->
+        <!-- User Rank and Coins Section -->
         <div class="section rank">
-            <p>Your Rank:</p>
-            <p>{{ user_rank['emoji'] }} {{ user_rank['name'] }}</p>
-            <p>Total Hours: {{ total_hours }}</p>
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="rank-info d-flex align-items-center">
+                        <span style="font-size: 2.5em;">{{ user_rank['emoji'] }}</span>
+                        <span style="font-size: 1.8em; margin-left: 10px;">{{ user_rank['name'] }}</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="progress mt-2" style="height: 20px;">
+                        <div class="progress-bar" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+                            {{ progress }}%
+                        </div>
+                    </div>
+                    <p class="mt-1">Hours for Next Level: {{ hours_next_level }}</p>
+                    <p class="mt-1">Hours Last Week: {{ hours_last_week }}</p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <div class="rank-coins">
+                        {% for coin in coins %}
+                            {% if coin.name in ['Everest Coins', 'Pizza Coins', 'Heartbeat Coins'] %}
+                                <span class="coin-item me-3" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ coin.name }}: Total - {{ coin.count }}, Last Week - {{ coin.last_week }}">
+                                    {{ coin['emoji'] }} {{ coin['count'] }}<span class="badge bg-success ms-1">+{{ coin['last_week'] }}</span>
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Summary Statistics Section -->
         <div class="section">
             <h2>Summary Statistics</h2>
-            <div class="stats">
-                <div class="card">
-                    <h3>Calories Burned</h3>
-                    <p>{{ stats.total_calories }}</p>
+            <div class="row">
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total calories burned across all activities">
+                        <h3><i class="fas fa-fire-alt"></i></h3>
+                        <p>{{ stats.total_calories }}</p>
+                    </div>
                 </div>
-                <div class="card">
-                    <h3>Distance Covered</h3>
-                    <p>{{ stats.total_distance }} meters</p>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total distance covered in meters">
+                        <h3><i class="fas fa-road"></i></h3>
+                        <p>{{ stats.total_distance }}</p>
+                    </div>
                 </div>
-                <div class="card">
-                    <h3>Total Time</h3>
-                    <p>{{ stats.total_time }} seconds</p>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total time spent on activities in seconds">
+                        <h3><i class="fas fa-hourglass-half"></i></h3>
+                        <p>{{ stats.total_time }}</p>
+                    </div>
                 </div>
-                <div class="card">
-                    <h3>Activity Count</h3>
-                    <p>{{ stats.activity_count }}</p>
+                <div class="col-md-3 col-sm-6 mb-3">
+                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of activities recorded">
+                        <h3><i class="fas fa-list-ul"></i></h3>
+                        <p>{{ stats.activity_count }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -48,11 +79,16 @@
         <!-- Coins Section -->
         <div class="section">
             <h2>Your Coins</h2>
-            <div class="coins">
+            <div class="row">
                 {% for coin in coins %}
-                    <div class="card">
-                        <h3>{{ coin['name'] }}</h3>
-                        <p>{{ coin['emoji'] }} {{ coin['count'] }}</p>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ coin['name'] }}: Total - {{ coin['count'] }}, Last Week - {{ coin['last_week'] }}">
+                            <h3>{{ coin['emoji'] }}</h3>
+                            <p>{{ coin['count'] }}</p>
+                            {% if coin['last_week'] > 0 %}
+                                <span class="badge bg-success">+{{ coin['last_week'] }}</span>
+                            {% endif %}
+                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -61,20 +97,27 @@
         <!-- Achievements Section -->
         <div class="section">
             <h2>Your Achievements</h2>
-            <div class="achievements">
+            <div class="row">
                 {% for achievement in achievements %}
-                    <div class="card">
-                        <h3>{{ achievement['name'] }}</h3>
-                        <p>{{ achievement['emoji'] }} {{ achievement['count'] }}</p>
+                    <div class="col-md-2 col-sm-4 col-6 mb-3">
+                        <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ achievement['name'] }}: Achieved {{ achievement['count'] }} times">
+                            <h3>{{ achievement['emoji'] }}</h3>
+                            <p>{{ achievement['count'] }}</p>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
         </div>
 
         <!-- Back to Upload Button -->
-        <div style="text-align: center; margin-top: 30px;">
-            <a href="/" style="text-decoration: none; padding: 10px 20px; background-color: #4285F4; color: white; border-radius: 5px;">Upload Another File</a>
+        <div class="text-center mt-4">
+            <a href="/" class="btn btn-secondary">Upload Another File</a>
         </div>
     </div>
+
+    <!-- Bootstrap JS and dependencies (Popper.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/scripts.js') }}"></script>
 </body>
 </html>

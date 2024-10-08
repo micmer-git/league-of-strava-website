@@ -1,0 +1,168 @@
+/* Import Roboto Font */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
+/* Apply Roboto Font Globally */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212; /* Dark background */
+    color: #E0E0E0; /* Light text for readability */
+}
+
+/* Container Styles */
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Section Styles */
+.section {
+    background-color: #1E1E1E;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.05);
+}
+
+/* Card Styles */
+.card {
+    background-color: #2C2C2C;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 8px;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0px 4px 20px rgba(255, 255, 255, 0.1);
+}
+
+.card h3 {
+    margin-bottom: 10px;
+    font-weight: 500;
+    font-size: 2em;
+}
+
+.card p {
+    font-size: 1.2em;
+    margin: 0;
+}
+
+/* Rank Section Styles */
+.rank {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.rank-info {
+    display: flex;
+    align-items: center;
+}
+
+.rank-info p {
+    margin: 0 10px 0 0;
+    font-size: 1.5em;
+}
+
+.rank-coins {
+    font-size: 1.2em;
+    color: #FFD700; /* Gold color for coins */
+}
+
+.coin-item {
+    display: inline-flex;
+    align-items: center;
+}
+
+.coin-item .badge {
+    font-size: 0.8em;
+}
+
+/* Tooltip Styles */
+.tooltip-inner {
+    background-color: #333333;
+    color: #E0E0E0;
+    border: none;
+    font-size: 0.9em;
+    max-width: 200px;
+}
+
+.bs-tooltip-top .arrow::before,
+.bs-tooltip-auto[x-placement^="top"] .arrow::before {
+    border-top-color: #333333;
+}
+
+.bs-tooltip-bottom .arrow::before,
+.bs-tooltip-auto[x-placement^="bottom"] .arrow::before {
+    border-bottom-color: #333333;
+}
+
+.bs-tooltip-left .arrow::before,
+.bs-tooltip-auto[x-placement^="left"] .arrow::before {
+    border-left-color: #333333;
+}
+
+.bs-tooltip-right .arrow::before,
+.bs-tooltip-auto[x-placement^="right"] .arrow::before {
+    border-right-color: #333333;
+}
+
+/* Progress Bar Styles */
+.progress {
+    background-color: #3A3A3A;
+}
+
+.progress-bar {
+    background-color: #1DB954; /* Spotify Green for progress */
+}
+
+/* Badge Styles */
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+/* Button Styles */
+.btn-primary {
+    background-color: #1F6FEB;
+    border: none;
+    font-weight: 500;
+}
+
+.btn-primary:hover {
+    background-color: #1158c7;
+}
+
+.btn-secondary {
+    background-color: #3A3A3A;
+    border: none;
+    font-weight: 500;
+}
+
+.btn-secondary:hover {
+    background-color: #575757;
+}
+
+/* Footer Styles (if needed) */
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #888888;
+    font-size: 0.9em;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .rank {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .rank-coins {
+        margin-top: 10px;
+    }
+}

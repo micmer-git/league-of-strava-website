@@ -16,27 +16,27 @@ logging.basicConfig(level=logging.INFO)
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
     {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
-    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 50},
-    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 100},
-    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 150},
-    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 200},
-    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 250},
-    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 300},
-    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 350},
-    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 400},
-    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 450},
-    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 500},
-    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 550},
-    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 600},
-    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 650},
-    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 700},
-    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 750},
-    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 800},
-    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 850},
-    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 900},
-    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 950},
-    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 1000},
-    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 1050},
+    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 5},
+    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 10},
+    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 15},
+    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 20},
+    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 25},
+    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 30},
+    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 35},
+    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 40},
+    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 45},
+    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 50},
+    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 55},
+    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 60},
+    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 65},
+    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 70},
+    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 75},
+    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 80},
+    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 85},
+    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 90},
+    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 95},
+    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 100},
+    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 105},
 ]
 
 # Dynamically add Master Prestige levels
@@ -44,7 +44,7 @@ for i in range(2, 101):
     rank_config.append({
         'name': f'Master Prestige {i}',
         'emoji': '⭐',
-        'min_hours': 1050 + (i - 1) * 100  # Each level requires 5 additional hours
+        'min_hours': 105 + (i - 1) * 5  # Each level requires 5 additional hours
     })
 
 # Achievement Configuration
@@ -88,7 +88,7 @@ def allowed_file(filename):
 def process_dataframe(dataframe):
     # Ensure necessary columns are present
     required_columns = ['Calories', 'Distance', 'Elapsed Time', 'Elevation Gain',
-                        'Max Heart Rate', 'Average Heart Rate', 'Activity Type']
+                        'Max Heart Rate', 'Average Heart Rate', 'Activity Type', 'Activity Date']
     missing_columns = [col for col in required_columns if col not in dataframe.columns]
     if missing_columns:
         error = f"The following required columns are missing in the uploaded file: {', '.join(missing_columns)}"
@@ -101,6 +101,20 @@ def process_dataframe(dataframe):
 
     # Drop rows with NaN values in numeric columns
     dataframe = dataframe.dropna(subset=numeric_columns).copy()
+
+    # Convert 'Activity Date' to datetime using the correct format
+    # Assuming the format is 'Mar 19, 2016, 8:44:35 AM'
+    date_format = '%b %d, %Y, %I:%M:%S %p'
+    dataframe['Activity Date'] = pd.to_datetime(
+        dataframe['Activity Date'], format=date_format, errors='coerce')
+
+    # Check if 'Activity Date' conversion was successful
+    if dataframe['Activity Date'].isnull().all():
+        error = "All 'Activity Date' values are invalid or could not be parsed. Please check the date format in your CSV file."
+        return None, error
+
+    # Drop rows with invalid dates
+    dataframe = dataframe.dropna(subset=['Activity Date']).copy()
 
     # Ensure 'Activity Type' is a string
     dataframe['Activity Type'] = dataframe['Activity Type'].astype(str)
@@ -157,12 +171,19 @@ def calculate_coins(df):
     climber_coin = len(df[df['Total Elevation Gain'] > 1000])
     michelin_star_coin = len(df[df['Calories'] > 2000])
 
+    # Coins collected in the last week
+    last_week = pd.Timestamp.now() - pd.Timedelta(days=7)
+    coins_last_week = df[df['Activity Date'] >= last_week]
+    everest_coins_last_week = coins_last_week['Total Elevation Gain'].sum() / EVEREST_HEIGHT
+    pizza_coins_last_week = coins_last_week['Calories'].sum() / PIZZA_CALORIES
+    heartbeat_coins_last_week = coins_last_week['Total Heartbeats'].sum() / HEARTBEAT_UNIT
+
     coins = [
-        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': round(everest_coins, 2)},
-        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': round(pizza_coins, 2)},
-        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': round(heartbeat_coins, 2)},
-        {'name': 'Climber Activities', 'emoji': '⛰️', 'count': climber_coin},
-        {'name': 'Michelin Star Burner', 'emoji': '🔥', 'count': michelin_star_coin}
+        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': round(everest_coins, 1), 'last_week': round(everest_coins_last_week, 1)},
+        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': round(pizza_coins, 1), 'last_week': round(pizza_coins_last_week, 1)},
+        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': round(heartbeat_coins, 1), 'last_week': round(heartbeat_coins_last_week, 1)},
+        {'name': 'Climber Activities', 'emoji': '⛰️', 'count': climber_coin, 'last_week': 0},
+        {'name': 'Michelin Star Burner', 'emoji': '🔥', 'count': michelin_star_coin, 'last_week': 0}
     ]
 
     return coins
@@ -208,6 +229,36 @@ def calculate_achievements(df, achievement_config):
 
     return achievements
 
+def calculate_progress(total_hours, rank_config):
+    # Find current rank index
+    sorted_ranks = sorted(rank_config, key=lambda x: x['min_hours'])
+    current_rank = None
+    next_rank = None
+    for rank in sorted_ranks:
+        if total_hours >= rank['min_hours']:
+            current_rank = rank
+    current_index = sorted_ranks.index(current_rank)
+    if current_index < len(sorted_ranks) - 1:
+        next_rank = sorted_ranks[current_index + 1]
+    else:
+        next_rank = current_rank  # No next rank
+
+    if next_rank['min_hours'] > current_rank['min_hours']:
+        progress = (total_hours - current_rank['min_hours']) / (next_rank['min_hours'] - current_rank['min_hours']) * 100
+    else:
+        progress = 100
+
+    return round(progress, 1), next_rank['min_hours'] - current_rank['min_hours']
+
+def calculate_hours_last_week(df):
+    last_week = pd.Timestamp.now() - pd.Timedelta(days=7)
+    hours_last_week = df[df['Activity Date'] >= last_week]['Elapsed Time'].sum() / 3600
+    return round(hours_last_week, 2)
+
+def calculate_hours_total(df):
+    total_hours = df['Elapsed Time'].sum() / 3600
+    return round(total_hours, 2)
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -234,16 +285,21 @@ def index():
                 achievements = calculate_achievements(dataframe, achievement_config)
                 coins = calculate_coins(dataframe)
                 stats = calculate_stats(dataframe)
-                total_hours = stats['total_time'] / 3600
+                total_hours = calculate_hours_total(dataframe)
+                hours_last_week = calculate_hours_last_week(dataframe)
                 user_rank = get_user_rank(total_hours, rank_config)
+                progress, hours_next_level = calculate_progress(total_hours, rank_config)
 
                 # Now render the dashboard template
                 return render_template('dashboard.html',
                                        user_rank=user_rank,
-                                       total_hours=round(total_hours, 2),
+                                       total_hours=total_hours,
                                        stats=stats,
                                        achievements=achievements,
-                                       coins=coins)
+                                       coins=coins,
+                                       progress=progress,
+                                       hours_next_level=hours_next_level,
+                                       hours_last_week=hours_last_week)
             except Exception as e:
                 logging.exception("Error processing the file.")
                 error = f'An error occurred during processing: {e}'
