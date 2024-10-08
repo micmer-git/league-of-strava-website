@@ -5,7 +5,7 @@
 body {
     font-family: 'Roboto', sans-serif;
     background-color: #121212; /* Dark background */
-    color: #E0E0E0; /* Light text for readability */
+    color: #FFFFFF; /* White text for readability */
 }
 
 /* Container Styles */
@@ -27,8 +27,8 @@ body {
 /* Card Styles */
 .card {
     background-color: #2C2C2C;
-    padding: 15px;
-    margin: 10px;
+    padding: 10px;
+    margin: 5px;
     border-radius: 8px;
     text-align: center;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -37,19 +37,28 @@ body {
 }
 
 .card:hover {
-    transform: translateY(-5px);
+    transform: translateY(-3px);
     box-shadow: 0px 4px 20px rgba(255, 255, 255, 0.1);
 }
 
 .card h3 {
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     font-weight: 500;
-    font-size: 2em;
+    font-size: 1.5em;
 }
 
 .card p {
-    font-size: 1.2em;
+    font-size: 1em;
     margin: 0;
+    color: #FFFFFF; /* Ensure text is white */
+}
+
+/* Achievement Badge Styles */
+.achievement-card .badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.8em;
 }
 
 /* Rank Section Styles */
@@ -67,6 +76,7 @@ body {
 .rank-info p {
     margin: 0 10px 0 0;
     font-size: 1.5em;
+    color: #FFFFFF;
 }
 
 .rank-coins {
@@ -81,6 +91,7 @@ body {
 
 .coin-item .badge {
     font-size: 0.8em;
+    background-color: #28a745 !important; /* Green badge */
 }
 
 /* Tooltip Styles */
@@ -155,6 +166,12 @@ body {
     font-size: 0.9em;
 }
 
+/* Carousel Controls */
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(100%);
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .rank {
@@ -165,4 +182,41 @@ body {
     .rank-coins {
         margin-top: 10px;
     }
+
+    .card h3 {
+        font-size: 1.2em;
+    }
+
+    .card p {
+        font-size: 0.9em;
+    }
+
+    /* Adjust achievement badge position for smaller screens */
+    .achievement-card .badge {
+        top: 5px;
+        right: 5px;
+    }
+}
+
+/* Summary Statistics List Group */
+.list-group-item {
+    border: none;
+    padding: 10px 15px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    background-color: #2C2C2C;
+}
+
+.list-group-item:hover {
+    background-color: #3A3A3A;
+}
+
+.list-group-item span {
+    font-size: 1em;
+}
+
+/* Remove default link styles */
+.list-group-item a {
+    text-decoration: none;
+    color: inherit;
 }

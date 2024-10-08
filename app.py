@@ -16,27 +16,27 @@ logging.basicConfig(level=logging.INFO)
 # Rank System Configuration in Python (Based on Total Hours)
 rank_config = [
     {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
-    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 5},
-    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 10},
-    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 15},
-    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 20},
-    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 25},
-    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 30},
-    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 35},
-    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 40},
-    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 45},
-    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 50},
-    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 55},
-    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 60},
-    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 65},
-    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 70},
-    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 75},
-    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 80},
-    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 85},
-    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 90},
-    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 95},
-    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 100},
-    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 105},
+    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 50},   # 5*10
+    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 100},  # 10*10
+    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 150},
+    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 200},
+    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 250},
+    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 300},
+    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 350},
+    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 400},
+    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 450},
+    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 500},
+    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 550},
+    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 600},
+    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 650},
+    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 700},
+    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 750},
+    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 800},
+    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 850},
+    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 900},
+    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 950},
+    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 1000},
+    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 1050},
 ]
 
 # Dynamically add Master Prestige levels
@@ -44,22 +44,88 @@ for i in range(2, 101):
     rank_config.append({
         'name': f'Master Prestige {i}',
         'emoji': '⭐',
-        'min_hours': 105 + (i - 1) * 5  # Each level requires 5 additional hours
+        'min_hours': 1050 + (i - 1) * 100  # Each level requires 50 additional hours
+    })
+
+
+from flask import Flask, render_template, request
+import pandas as pd
+from werkzeug.utils import secure_filename
+import logging
+import os
+
+app = Flask(__name__)
+
+# Configuration
+ALLOWED_EXTENSIONS = {'csv'}
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
+
+# Initialize logging
+logging.basicConfig(level=logging.INFO)
+
+# Rank System Configuration in Python (Based on Total Hours)
+rank_config = [
+    {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
+    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 50},   # 5*10
+    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 100},  # 10*10
+    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 150},
+    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 200},
+    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 250},
+    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 300},
+    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 350},
+    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 400},
+    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 450},
+    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 500},
+    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 550},
+    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 600},
+    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 650},
+    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 700},
+    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 750},
+    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 800},
+    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 850},
+    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 900},
+    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 950},
+    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 1000},
+    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 1050},
+]
+
+# Dynamically add Master Prestige levels
+for i in range(2, 101):
+    rank_config.append({
+        'name': f'Master Prestige {i}',
+        'emoji': '⭐',
+        'min_hours': 1050 + (i - 1) * 50  # Each level requires 50 additional hours
     })
 
 # Achievement Configuration
+# Achievement Configuration
 achievement_config = {
-    'distance_badges': [
+    'longestStreak': {
+        'name': 'Longest Streak',
+        'emoji': '🔥',
+        'count': 0
+    },
+    'distanceBadges': [
         {'name': '100 km', 'emoji': '💯', 'threshold': 100, 'count': 0},
         {'name': '200 km', 'emoji': '🔱', 'threshold': 200, 'count': 0},
         {'name': '300 km', 'emoji': '⚜️', 'threshold': 300, 'count': 0},
     ],
-    'duration_badges': [
-        {'name': '3 Hours', 'emoji': '⌛', 'threshold': 3, 'count': 0},  # threshold in hours
-        {'name': '6 Hours', 'emoji': '⏱️', 'threshold': 6, 'count': 0},
-        {'name': '12 Hours', 'emoji': '🌇', 'threshold': 12, 'count': 0},
+    'durationBadges': [
+        {'name': '3 Hours', 'emoji': '⌛', 'threshold': 180, 'count': 0},  # 180 minutes
+        {'name': '6 Hours', 'emoji': '⏱️', 'threshold': 360, 'count': 0},  # 360 minutes
+        {'name': '12 Hours', 'emoji': '🌇', 'threshold': 720, 'count': 0},  # 720 minutes
     ],
-    'additional_achievements': [
+    'weeklyBadges': [
+        {'name': '5 Hours Week', 'emoji': '💰', 'threshold': 5, 'count': 0},   # 5 hours per week
+        {'name': '10 Hours Week', 'emoji': '🧈', 'threshold': 10, 'count': 0},  # 10 hours per week
+        {'name': '20 Hours Week', 'emoji': '💎', 'threshold': 20, 'count': 0},  # 20 hours per week
+    ],
+    'specialOccasions': [
+        {'name': 'New Year Run', 'emoji': '🎉', 'dates': ['01-01'], 'count': 0},
+        {'name': 'Christmas Run', 'emoji': '🎄', 'dates': ['12-25'], 'count': 0},
+        # Add more special occasions as needed
+    ],
+    'additionalAchievements': [
         {
             'name': 'Marathon Master',
             'emoji': '4️⃣2️⃣🏃',
@@ -70,15 +136,36 @@ achievement_config = {
         },
         {
             'name': 'Half Marathon Master',
-            'emoji': '️2️⃣1️⃣🏃',
+            'emoji': '2️⃣1️⃣🏃',
             'description': 'Completed a half marathon (21.0975 km)',
             'count': 0,
             'type': 'Run',  # Specify the activity type
             'distance': 21097.5  # Half marathon distance in meters
         },
-        # Add other achievements as needed
+        {
+            'name': 'Climbing King',
+            'emoji': '🧗‍♂️',
+            'description': 'Total elevation gain over 1000m',
+            'count': 0
+        },
+        {
+            'name': 'Speedster',
+            'emoji': '🏎️',
+            'description': 'Achieved an average speed over 30 km/h',
+            'count': 0
+        },
+        {
+            'name': 'Consistency Champion',
+            'emoji': '🔁',
+            'description': 'Logged activities every day for a month',
+            'count': 0
+        },
     ]
 }
+
+
+
+
 
 def allowed_file(filename):
     return '.' in filename and \
@@ -129,9 +216,9 @@ def process_dataframe(dataframe):
 # Calculate summary statistics
 def calculate_stats(df):
     stats = {
-        'total_calories': df['Calories'].sum(),
-        'total_distance': df['Distance'].sum(),  # Assuming distance is in meters
-        'total_time': df['Elapsed Time'].sum(),  # Assuming time is in seconds
+        'total_calories': int(df['Calories'].sum()),
+        'total_distance': int(df['Distance'].sum() / 1000),  # in km, integer
+        'total_time': int(df['Elapsed Time'].sum() / 3600),  # in hours, integer
         'activity_count': df.shape[0],
     }
     return stats
@@ -148,7 +235,7 @@ def calculate_coins(df):
     # Constants
     EVEREST_HEIGHT = 8848  # in meters
     PIZZA_CALORIES = 1000  # kcal
-    HEARTBEAT_UNIT = 150  # heartbeats per coin
+    HEARTBEAT_UNIT = 1  # heartbeats per coin
 
     # Ensure necessary columns are numeric
     df['Total Elevation Gain'] = pd.to_numeric(df['Elevation Gain'], errors='coerce').fillna(0)
@@ -171,63 +258,136 @@ def calculate_coins(df):
     climber_coin = len(df[df['Total Elevation Gain'] > 1000])
     michelin_star_coin = len(df[df['Calories'] > 2000])
 
-    # Coins collected in the last week
-    last_week = pd.Timestamp.now() - pd.Timedelta(days=7)
-    coins_last_week = df[df['Activity Date'] >= last_week]
-    everest_coins_last_week = coins_last_week['Total Elevation Gain'].sum() / EVEREST_HEIGHT
-    pizza_coins_last_week = coins_last_week['Calories'].sum() / PIZZA_CALORIES
-    heartbeat_coins_last_week = coins_last_week['Total Heartbeats'].sum() / HEARTBEAT_UNIT
+    # Coins collected in the last 30 days
+    last_month = pd.Timestamp.now() - pd.Timedelta(days=30)
+    coins_last_month_df = df[df['Activity Date'] >= last_month]
+    everest_coins_last_month = coins_last_month_df['Total Elevation Gain'].sum() / EVEREST_HEIGHT
+    pizza_coins_last_month = coins_last_month_df['Calories'].sum() / PIZZA_CALORIES
+    heartbeat_coins_last_month = coins_last_month_df['Total Heartbeats'].sum() / HEARTBEAT_UNIT
 
     coins = [
-        {'name': 'Everest Coins', 'emoji': '🏔️', 'count': round(everest_coins, 1), 'last_week': round(everest_coins_last_week, 1)},
-        {'name': 'Pizza Coins', 'emoji': '🍕', 'count': round(pizza_coins, 1), 'last_week': round(pizza_coins_last_week, 1)},
-        {'name': 'Heartbeat Coins', 'emoji': '❤️', 'count': round(heartbeat_coins, 1), 'last_week': round(heartbeat_coins_last_week, 1)},
-        {'name': 'Climber Activities', 'emoji': '⛰️', 'count': climber_coin, 'last_week': 0},
-        {'name': 'Michelin Star Burner', 'emoji': '🔥', 'count': michelin_star_coin, 'last_week': 0}
+        {
+            'name': 'Everest Coins',
+            'emoji': '🏔️',
+            'count': round(everest_coins, 1),  # Keep one decimal
+            'last_month': round(everest_coins_last_month, 1)
+        },
+        {
+            'name': 'Pizza Coins',
+            'emoji': '🍕',
+            'count': int(pizza_coins),  # No decimals
+            'last_month': int(pizza_coins_last_month)
+        },
+        {
+            'name': 'Heartbeat Coins',
+            'emoji': '❤️',
+            'count': round(heartbeat_coins / 1000000, 1),  # Keep as float for frontend formatting
+            'last_month': round(heartbeat_coins_last_month / 1000000, 1)
+        },
+        {
+            'name': 'Climber Activities',
+            'emoji': '⛰️',
+            'count': climber_coin,  # Integer
+            'last_month': 0  # Integer
+        },
+        {
+            'name': 'Michelin Star Burner',
+            'emoji': '🔥',
+            'count': michelin_star_coin,  # Integer
+            'last_month': 0  # Integer
+        }
     ]
 
     return coins
 
+
 def calculate_achievements(df, achievement_config):
-    achievements = []
+    """
+    Calculates achievements based on the provided activities DataFrame and updates the achievement_config.
+    """
+    # Reset counts
+    achievement_config['longestStreak']['count'] = 0
+    for badge in achievement_config['distanceBadges']:
+        badge['count'] = 0
+    for badge in achievement_config['durationBadges']:
+        badge['count'] = 0
+    for badge in achievement_config['weeklyBadges']:
+        badge['count'] = 0
+    for badge in achievement_config['specialOccasions']:
+        badge['count'] = 0
+    for badge in achievement_config['additionalAchievements']:
+        badge['count'] = 0
 
-    # Distance Badges
-    total_distance_km = df['Distance'].sum() / 1000
-    for badge in achievement_config['distance_badges']:
-        badge_count = int(total_distance_km // badge['threshold'])
-        if badge_count > 0:
-            achievements.append({
-                'name': badge['name'],
-                'emoji': badge['emoji'],
-                'count': badge_count
-            })
+    # Calculate Longest Streak
+    df_sorted = df.sort_values('Activity Date')
+    unique_dates = df_sorted['Activity Date'].dt.date.unique()
+    current_streak = 1
+    max_streak = 1
+    for i in range(1, len(unique_dates)):
+        delta = (unique_dates[i] - unique_dates[i - 1]).days
+        if delta == 1:
+            current_streak += 1
+            if current_streak > max_streak:
+                max_streak = current_streak
+        else:
+            current_streak = 1
+    achievement_config['longestStreak']['count'] = max_streak
 
-    # Duration Badges
-    total_hours = df['Elapsed Time'].sum() / 3600
-    for badge in achievement_config['duration_badges']:
-        badge_count = int(total_hours // badge['threshold'])
-        if badge_count > 0:
-            achievements.append({
-                'name': badge['name'],
-                'emoji': badge['emoji'],
-                'count': badge_count
-            })
+    # Calculate Distance Badges
+    total_distance_km = df['Distance'].sum() / 1000  # Convert meters to kilometers
+    for badge in achievement_config['distanceBadges']:
+        badge['count'] = int(total_distance_km // badge['threshold'])
 
-    # Marathon and Half Marathon
-    for achievement in achievement_config['additional_achievements']:
-        completed_activities = df[
-            (df['Activity Type'].str.lower() == achievement['type'].lower()) &
-            (df['Distance'] >= achievement['distance'])
-        ]
-        achievement_count = len(completed_activities)
-        if achievement_count > 0:
-            achievements.append({
-                'name': achievement['name'],
-                'emoji': achievement['emoji'],
-                'count': achievement_count
-            })
+    # Calculate Duration Badges
+    total_duration_minutes = df['Elapsed Time'].sum() / 60  # Convert seconds to minutes
+    for badge in achievement_config['durationBadges']:
+        badge['count'] = int(total_duration_minutes // badge['threshold'])
 
-    return achievements
+    # Calculate Weekly Badges
+    df_sorted['Week'] = df_sorted['Activity Date'].dt.isocalendar().week
+    weekly_hours = df_sorted.groupby('Week')['Elapsed Time'].sum() / 3600  # Convert seconds to hours
+    for badge in achievement_config['weeklyBadges']:
+        badge['count'] = int((weekly_hours >= badge['threshold']).sum())
+
+    # Calculate Special Occasion Badges
+    df_sorted['Month-Day'] = df_sorted['Activity Date'].dt.strftime('%m-%d')
+    for badge in achievement_config['specialOccasions']:
+        badge['count'] = (df_sorted['Month-Day'] == badge['dates'][0]).sum()
+        # If multiple dates, you can modify the logic accordingly
+
+    # Calculate Additional Achievements
+    for badge in achievement_config['additionalAchievements']:
+        if badge['name'] in ['Marathon Master', 'Half Marathon Master']:
+            qualifying_activities = df_sorted[
+                (df_sorted['Activity Type'].str.lower() == badge['type'].lower()) &
+                (df_sorted['Distance'] >= badge['distance'])
+            ]
+            unique_days = qualifying_activities['Activity Date'].dt.date.nunique()
+            badge['count'] = unique_days
+        elif badge['name'] == 'Climbing King':
+            total_elevation = df_sorted['Elevation Gain'].sum()
+            badge['count'] = total_elevation // 1000  # Integer division
+        elif badge['name'] == 'Speedster':
+            df_sorted['Speed'] = df_sorted['Distance'] / df_sorted['Elapsed Time'] * 3600 / 1000  # km/h
+            speed_achievements = df_sorted[df_sorted['Speed'] > 30]
+            badge['count'] = speed_achievements.shape[0]
+        elif badge['name'] == 'Consistency Champion':
+            # Check for at least one activity every day for any 30-day window
+            activity_dates = sorted(df_sorted['Activity Date'].dt.date.unique())
+            streak = 0
+            for i in range(1, len(activity_dates)):
+                delta = (activity_dates[i] - activity_dates[i - 1]).days
+                if delta == 1:
+                    streak += 1
+                else:
+                    streak = 0
+                if streak >= 29:  # 30 consecutive days
+                    badge['count'] += 1
+                    streak = 0  # Reset after achieving
+        # Add more cases if you have additional achievements
+
+    return achievement_config
+
 
 def calculate_progress(total_hours, rank_config):
     # Find current rank index
@@ -249,6 +409,11 @@ def calculate_progress(total_hours, rank_config):
         progress = 100
 
     return round(progress, 1), next_rank['min_hours'] - current_rank['min_hours']
+
+def calculate_hours_last_month(df):
+    last_month = pd.Timestamp.now() - pd.Timedelta(days=30)
+    hours_last_month = df[df['Activity Date'] >= last_month]['Elapsed Time'].sum() / 3600
+    return round(hours_last_month, 2)
 
 def calculate_hours_last_week(df):
     last_week = pd.Timestamp.now() - pd.Timedelta(days=7)
@@ -286,7 +451,7 @@ def index():
                 coins = calculate_coins(dataframe)
                 stats = calculate_stats(dataframe)
                 total_hours = calculate_hours_total(dataframe)
-                hours_last_week = calculate_hours_last_week(dataframe)
+                hours_last_month = calculate_hours_last_month(dataframe)  # Update this function
                 user_rank = get_user_rank(total_hours, rank_config)
                 progress, hours_next_level = calculate_progress(total_hours, rank_config)
 
@@ -299,7 +464,7 @@ def index():
                                        coins=coins,
                                        progress=progress,
                                        hours_next_level=hours_next_level,
-                                       hours_last_week=hours_last_week)
+                                       hours_last_month=hours_last_month)
             except Exception as e:
                 logging.exception("Error processing the file.")
                 error = f'An error occurred during processing: {e}'

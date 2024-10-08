@@ -14,7 +14,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- User Rank and Coins Section -->
+        <!-- User Rank and Progress Section -->
         <div class="section rank">
             <div class="row align-items-center">
                 <div class="col-md-8">
@@ -29,14 +29,17 @@
                         </div>
                     </div>
                     <p class="mt-1">Hours for Next Level: {{ hours_next_level }}</p>
-                    <p class="mt-1">Hours Last Week: {{ hours_last_week }}</p>
+                    <p class="mt-1">Hours Last Month: {{ hours_last_month }}</p>
                 </div>
                 <div class="col-md-4 text-end">
                     <div class="rank-coins">
                         {% for coin in coins %}
                             {% if coin.name in ['Everest Coins', 'Pizza Coins', 'Heartbeat Coins'] %}
-                                <span class="coin-item me-3" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ coin.name }}: Total - {{ coin.count }}, Last Week - {{ coin.last_week }}">
-                                    {{ coin['emoji'] }} {{ coin['count'] }}<span class="badge bg-success ms-1">+{{ coin['last_week'] }}</span>
+                                <span class="coin-item me-3" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ coin['name'] }}: Total - {{ coin['count'] }}{% if coin.name == 'Heartbeat Coins' %}M{% endif %}, Last Month - {{ coin['last_month'] }}{% if coin.name == 'Heartbeat Coins' %}M{% endif %}">
+                                    {{ coin['emoji'] }} {{ coin['count'] }}{% if coin.name == 'Heartbeat Coins' %}M{% endif %}
+                                    {% if coin['last_month'] > 0 %}
+                                        <span class="badge bg-success ms-1">+{{ coin['last_month'] }}{% if coin.name == 'Heartbeat Coins' %}M{% endif %}</span>
+                                    {% endif %}
                                 </span>
                             {% endif %}
                         {% endfor %}
@@ -48,64 +51,59 @@
         <!-- Summary Statistics Section -->
         <div class="section">
             <h2>Summary Statistics</h2>
-            <div class="row">
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total calories burned across all activities">
-                        <h3><i class="fas fa-fire-alt"></i></h3>
-                        <p>{{ stats.total_calories }}</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total distance covered in meters">
-                        <h3><i class="fas fa-road"></i></h3>
-                        <p>{{ stats.total_distance }}</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Total time spent on activities in seconds">
-                        <h3><i class="fas fa-hourglass-half"></i></h3>
-                        <p>{{ stats.total_time }}</p>
-                    </div>
-                </div>
-                <div class="col-md-3 col-sm-6 mb-3">
-                    <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="Number of activities recorded">
-                        <h3><i class="fas fa-list-ul"></i></h3>
-                        <p>{{ stats.activity_count }}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Coins Section -->
-        <div class="section">
-            <h2>Your Coins</h2>
-            <div class="row">
-                {% for coin in coins %}
-                    <div class="col-md-2 col-sm-4 col-6 mb-3">
-                        <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ coin['name'] }}: Total - {{ coin['count'] }}, Last Week - {{ coin['last_week'] }}">
-                            <h3>{{ coin['emoji'] }}</h3>
-                            <p>{{ coin['count'] }}</p>
-                            {% if coin['last_week'] > 0 %}
-                                <span class="badge bg-success">+{{ coin['last_week'] }}</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                {% endfor %}
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-fire-alt"></i> Calories Burned</span>
+                    <span>{{ stats.total_calories }}</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-road"></i> Distance Covered</span>
+                    <span>{{ stats.total_distance }} km</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-hourglass-half"></i> Time Spent</span>
+                    <span>{{ stats.total_time }} h</span>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action bg-dark text-white d-flex justify-content-between align-items-center">
+                    <span><i class="fas fa-list-ul"></i> Activities Count</span>
+                    <span>{{ stats.activity_count }}</span>
+                </a>
             </div>
         </div>
 
         <!-- Achievements Section -->
         <div class="section">
             <h2>Your Achievements</h2>
-            <div class="row">
-                {% for achievement in achievements %}
-                    <div class="col-md-2 col-sm-4 col-6 mb-3">
-                        <div class="card" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ achievement['name'] }}: Achieved {{ achievement['count'] }} times">
-                            <h3>{{ achievement['emoji'] }}</h3>
-                            <p>{{ achievement['count'] }}</p>
+            <div id="achievementsCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for chunk in achievements|batch(4, fill_with=None) %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <div class="row justify-content-center">
+                                {% for achievement in chunk %}
+                                    {% if achievement %}
+                                        <div class="col-md-3 col-sm-6 mb-3">
+                                            <div class="card achievement-card" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ achievement['description'] }}">
+                                                <h3>{{ achievement['emoji'] }}</h3>
+                                                <p>{{ achievement['count'] }}</p>
+                                                {% if achievement.name in ['Longest Streak', 'Weekly Consistency', 'Monthly Consistency'] and achievement['count'] > 0 %}
+                                                    <span class="badge bg-success">+{{ achievement['count'] }}</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
                         </div>
-                    </div>
-                {% endfor %}
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#achievementsCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#achievementsCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
             </div>
         </div>
 
