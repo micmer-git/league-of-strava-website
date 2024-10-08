@@ -1,4 +1,4 @@
-document.getElementById('file-input').addEventListener('change', function(e) {
+document.getElementById('csv-file-input').addEventListener('change', function(e) {
     const file = e.target.files[0];
 
     if (file) {
@@ -19,7 +19,33 @@ document.getElementById('file-input').addEventListener('change', function(e) {
     }
 });
 
+document.getElementById('upload-button').addEventListener('click', function() {
+    const fileInput = document.getElementById('csv-file-input');
+    const file = fileInput.files[0];
+
+    if (file) {
+        console.log('File selected:', file.name); // Debugging
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: function(results) {
+                // Map CSV data to activity objects
+                const activities = results.data.map(mapCsvRowToActivity);
+                console.log('Activities:', activities.slice(0, 10)); // Log first 10 activities
+                // Initialize the dashboard with the mapped activities
+                initializeDashboard(activities);
+            },
+            error: function(err) {
+                console.error('Error parsing CSV:', err);
+            }
+        });
+    } else {
+        console.error('No file selected.');
+    }
+});
+
 function mapCsvRowToActivity(row) {
+    console.log('Mapping row:', row); // Debugging
     return {
         id: row['Activity ID'],
         start_date: row['Activity Date'],
@@ -148,7 +174,8 @@ let GENDER = 'male'; // 'male' or 'female'
 
 // Function to initialize the dashboard with parsed activities
 function initializeDashboard(activities) {
-  allActivities = activities;
+    console.log('Initializing dashboard with activities:', activities.slice(0, 10)); // Debugging
+    allActivities = activities;
   currentPage = 1;
   hasMoreActivities = false; // Since all data is loaded from CSV
   displayActivities(allActivities, true);
