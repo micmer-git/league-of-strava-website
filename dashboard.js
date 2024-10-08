@@ -175,6 +175,8 @@ function mapCSVToActivities(csvData) {
   return csvData.map(row => {
     const activity = {
       id: row['Activity ID'],
+      start_date: parseDate(row['Activity Date']),
+      name: row['Activity Name'],
     };
 
     // Remove debugging console.log if not needed
