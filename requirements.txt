@@ -3,3 +3,4 @@ pandas
 gunicorn
 Werkzeug
 sqlalchemy
+flask_sqlalchemy
