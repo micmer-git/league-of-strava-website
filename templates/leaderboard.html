@@ -46,25 +46,35 @@
                 </tr>
             </thead>
             <tbody>
-                {% for user in users %}
-                <tr>
-                    <td>
-                        <span class="rank-emoji">{{ user.rank.emoji }}</span> {{ user.rank.name }}
-                    </td>
-                    <td>{{ user.username }}</td>
-                    <td>
-                        {% for coin in user.coins %}
-                            <span class="coin-emoji">{{ coin.emoji }}</span> {{ coin.count }}
-                        {% endfor %}
-                    </td>
-                    <td>
-                        {% for achievement in user.achievements %}
-                            <span class="achievement-emoji">{{ achievement.emoji }}</span> x{{ achievement.count }}
-                        {% endfor %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+    {% for user in users %}
+    <tr>
+        <td>
+            <span class="rank-emoji">{{ user.rank_emoji }}</span> {{ user.rank_name }}
+        </td>
+        <td>{{ user.username }}</td>
+        <td>
+            {% for coin in user.coins %}
+                <span class="coin-emoji">{{ coin['emoji'] }}</span> {{ coin['count'] }}
+            {% endfor %}
+        </td>
+        <td>
+            {% for category, achievements in user.achievements.items() %}
+                {% if category != 'longestStreak' %}
+                    {% for achievement in achievements %}
+                        {% if achievement['count'] > 0 %}
+                            <span class="achievement-emoji">{{ achievement['emoji'] }}</span> x{{ achievement['count'] }}
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    {% if achievements['count'] > 0 %}
+                        <span class="achievement-emoji">{{ achievements['emoji'] }}</span> x{{ achievements['count'] }}
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+        </td>
+    </tr>
+    {% endfor %}
+</tbody>
         </table>
     </div>
 

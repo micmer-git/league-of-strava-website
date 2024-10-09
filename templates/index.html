@@ -20,12 +20,17 @@
                 </div>
             {% endif %}
             <div class="upload-form">
-                <form method="post" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input class="form-control form-control-lg" type="file" name="file" accept=".csv" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary btn-lg">Upload and Analyze</button>
-                </form>
+              <form method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="file" class="form-label">Upload CSV File:</label>
+                    <input type="file" class="form-control" id="file" name="file" accept=".csv" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </form>
             </div>
         </div>
     </div>

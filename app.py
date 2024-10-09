@@ -3,12 +3,33 @@ import pandas as pd
 from werkzeug.utils import secure_filename
 import logging
 import os
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import relationship
 
 app = Flask(__name__)
 
 # Configuration
 ALLOWED_EXTENSIONS = {'csv'}
 app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024  # 10 Megabytes
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'  # Database URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False, unique=True)
+    rank_name = db.Column(db.String(100), nullable=False)
+    rank_emoji = db.Column(db.String(10), nullable=False)
+    total_hours = db.Column(db.Float, nullable=False)
+    coins = db.Column(db.PickleType, nullable=False)          # Changed to PickleType
+    achievements = db.Column(db.PickleType, nullable=False)   # Changed to PickleType
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO)
@@ -44,48 +65,6 @@ users = [
     # Add more users as needed
 ]
 
-# Rank System Configuration in Python (Based on Total Hours)
-rank_config = [
-    {'name': 'Bronze 3', 'emoji': '🥉', 'min_hours': 0},
-    {'name': 'Bronze 2', 'emoji': '🥉', 'min_hours': 50},   # 5*10
-    {'name': 'Bronze 1', 'emoji': '🥉', 'min_hours': 100},  # 10*10
-    {'name': 'Silver 3', 'emoji': '🥈', 'min_hours': 150},
-    {'name': 'Silver 2', 'emoji': '🥈', 'min_hours': 200},
-    {'name': 'Silver 1', 'emoji': '🥈', 'min_hours': 250},
-    {'name': 'Gold 3', 'emoji': '🥇', 'min_hours': 300},
-    {'name': 'Gold 2', 'emoji': '🥇', 'min_hours': 350},
-    {'name': 'Gold 1', 'emoji': '🥇', 'min_hours': 400},
-    {'name': 'Platinum 3', 'emoji': '🏆', 'min_hours': 450},
-    {'name': 'Platinum 2', 'emoji': '🏆', 'min_hours': 500},
-    {'name': 'Platinum 1', 'emoji': '🏆', 'min_hours': 550},
-    {'name': 'Diamond 3', 'emoji': '💎', 'min_hours': 600},
-    {'name': 'Diamond 2', 'emoji': '💎', 'min_hours': 650},
-    {'name': 'Diamond 1', 'emoji': '💎', 'min_hours': 700},
-    {'name': 'Master 3', 'emoji': '🔥', 'min_hours': 750},
-    {'name': 'Master 2', 'emoji': '🔥', 'min_hours': 800},
-    {'name': 'Master 1', 'emoji': '🔥', 'min_hours': 850},
-    {'name': 'Grandmaster 3', 'emoji': '🚀', 'min_hours': 900},
-    {'name': 'Grandmaster 2', 'emoji': '🚀', 'min_hours': 950},
-    {'name': 'Grandmaster 1', 'emoji': '🚀', 'min_hours': 1000},
-    {'name': 'Challenger', 'emoji': '🌟', 'min_hours': 1050},
-]
-
-# Dynamically add Master Prestige levels
-for i in range(2, 101):
-    rank_config.append({
-        'name': f'Master Prestige {i}',
-        'emoji': '⭐',
-        'min_hours': 1050 + (i - 1) * 100  # Each level requires 50 additional hours
-    })
-
-
-from flask import Flask, render_template, request
-import pandas as pd
-from werkzeug.utils import secure_filename
-import logging
-import os
-
-app = Flask(__name__)
 
 # Configuration
 ALLOWED_EXTENSIONS = {'csv'}
@@ -460,19 +439,21 @@ def calculate_hours_total(df):
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        # Check if the POST request has the file part
+        username = request.form.get('username')
+        if not username:
+            error = 'Please enter a username.'
+            return render_template('index.html', error=error)
+
+        # Rest of your file upload code...
         if 'file' not in request.files:
             error = 'No file part in the request.'
             return render_template('index.html', error=error)
         file = request.files['file']
-        # If the user does not select a file
         if file.filename == '':
             error = 'No file selected.'
             return render_template('index.html', error=error)
         if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            # Optionally, save the file to a temporary location
-            # file.save(os.path.join('uploads', filename))
+            # Process the file
             try:
                 dataframe = pd.read_csv(file)
                 dataframe, error = process_dataframe(dataframe)
@@ -480,15 +461,27 @@ def index():
                     return render_template('index.html', error=error)
 
                 # Proceed with processing
-                achievements = calculate_achievements(dataframe, achievement_config)
+                achievements = calculate_achievements(dataframe, achievement_config.copy())
                 coins = calculate_coins(dataframe)
                 stats = calculate_stats(dataframe)
                 total_hours = calculate_hours_total(dataframe)
-                hours_last_month = calculate_hours_last_month(dataframe)  # Update this function
+                hours_last_month = calculate_hours_last_month(dataframe)
                 user_rank = get_user_rank(total_hours, rank_config)
                 progress, hours_next_level = calculate_progress(total_hours, rank_config)
 
-                # Now render the dashboard template
+                # Save user data to the database
+                user = User(
+                    username=username,
+                    rank_name=user_rank['name'],
+                    rank_emoji=user_rank['emoji'],
+                    total_hours=total_hours,
+                    coins=coins,
+                    achievements=achievements
+                )
+                db.session.add(user)
+                db.session.commit()
+
+                # Render the dashboard
                 return render_template('dashboard.html',
                                        user_rank=user_rank,
                                        total_hours=total_hours,
@@ -506,7 +499,6 @@ def index():
             error = 'Invalid file type. Please upload a CSV file.'
             return render_template('index.html', error=error)
     else:
-        # GET request, show the file upload form
         return render_template('index.html')
 
 
@@ -514,12 +506,22 @@ def index():
 # Route for the leaderboard
 @app.route('/leaderboard')
 def leaderboard():
-    # Sort users by rank
+    # Retrieve all users from the database
+    users = User.query.all()
+
+    # Create a rank order mapping
     rank_order = {rank['name']: index for index, rank in enumerate(rank_config)}
-    sorted_users = sorted(users, key=lambda x: rank_order.get(x['rank']['name'], len(rank_order)))
+
+    # Function to get rank index
+    def get_rank_index(rank_name):
+        return rank_order.get(rank_name, len(rank_order))
+
+    # Sort users by rank
+    sorted_users = sorted(users, key=lambda x: get_rank_index(x.rank_name))
+
     return render_template('leaderboard.html', users=sorted_users)
 
 if __name__ == '__main__':
-    # Ensure the 'uploads' directory exists if you plan to save files
-    # os.makedirs('uploads', exist_ok=True)
+    with app.app_context():
+        db.create_all()  # Creates the tables if they don't exist
     app.run(debug=True)
